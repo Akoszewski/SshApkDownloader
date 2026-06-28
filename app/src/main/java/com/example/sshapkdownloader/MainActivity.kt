@@ -1,8 +1,13 @@
 package com.example.sshapkdownloader
 
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.text.InputType
 import android.view.Gravity
 import android.view.inputmethod.EditorInfo
@@ -14,9 +19,12 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import com.jcraft.jsch.ChannelExec
+import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.OutputStream
 
 class MainActivity : Activity() {
     private data class SshTarget(
@@ -240,13 +248,87 @@ class MainActivity : Activity() {
             apkListContainer.addView(Button(this).apply {
                 text = apkName
                 setOnClickListener {
-                    showToast("Download not implemented yet")
+                    downloadApk(apkName)
                 }
             })
         }
     }
 
+    private fun downloadApk(apkName: String) {
+        saveValues()
+        val address = ipAddressEditText.text.toString().trim()
+        val privateKey = sshKeyEditText.text.toString()
+
+        if (address.isEmpty() || privateKey.isBlank()) {
+            showToast("IP address and SSH key are required")
+            return
+        }
+
+        showToast("Download started: $apkName")
+
+        Thread {
+            runCatching {
+                val session = createSession(parseSshTarget(address), privateKey)
+                try {
+                    session.connect(15_000)
+                    downloadRemoteApk(session, apkName)
+                } finally {
+                    session.disconnect()
+                }
+            }.onSuccess {
+                showToastOnUiThread("Download completed: $apkName")
+            }.onFailure { error ->
+                showToastOnUiThread("Download error: ${error.message ?: error.javaClass.simpleName}")
+            }
+        }.start()
+    }
+
+    private fun downloadRemoteApk(session: Session, apkName: String) {
+        require(apkName.endsWith(".apk")) { "Only APK files can be downloaded" }
+        require(!apkName.contains("/") && !apkName.contains("\\")) { "Invalid APK filename" }
+
+        val channel = session.openChannel("sftp") as ChannelSftp
+        channel.connect(15_000)
+        try {
+            channel.cd("Artifacts/android")
+            openDownloadOutputStream(apkName).use { output ->
+                channel.get(apkName, output)
+            }
+        } finally {
+            channel.disconnect()
+        }
+    }
+
+    private fun openDownloadOutputStream(apkName: String): OutputStream {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, apkName)
+                put(MediaStore.Downloads.MIME_TYPE, "application/vnd.android.package-archive")
+                put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/SshApkDownloader")
+                put(MediaStore.Downloads.IS_PENDING, 0)
+            }
+            val uri: Uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                ?: error("Cannot create download file")
+            contentResolver.openOutputStream(uri) ?: error("Cannot open download file")
+        } else {
+            val downloadsDir = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                "SshApkDownloader"
+            )
+            if (!downloadsDir.exists() && !downloadsDir.mkdirs()) {
+                error("Cannot create ${downloadsDir.absolutePath}")
+            }
+            File(downloadsDir, apkName).outputStream()
+        }
+    }
+
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showToastOnUiThread(message: String) {
+        runOnUiThread {
+            showToast(message)
+        }
     }
 }
