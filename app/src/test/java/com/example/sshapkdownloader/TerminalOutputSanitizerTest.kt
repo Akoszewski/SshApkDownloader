@@ -1,0 +1,42 @@
+package com.example.sshapkdownloader
+
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class TerminalOutputSanitizerTest {
+    @Test
+    fun stripsAnsiColorSequences() {
+        val sanitizer = TerminalOutputSanitizer()
+
+        assertEquals(
+            "file.apk\n",
+            sanitizer.clean("\u001B[01;32mfile.apk\u001B[0m\r\n")
+        )
+    }
+
+    @Test
+    fun stripsBracketedPasteSequencesSplitAcrossChunks() {
+        val sanitizer = TerminalOutputSanitizer()
+
+        assertEquals("", sanitizer.clean("\u001B[?200"))
+        assertEquals("prompt$ ", sanitizer.clean("4hprompt$ "))
+        assertEquals("", sanitizer.clean("\u001B[?2004l"))
+    }
+
+    @Test
+    fun stripsOscWindowTitleSequences() {
+        val sanitizer = TerminalOutputSanitizer()
+
+        assertEquals(
+            "output\n",
+            sanitizer.clean("\u001B]0;user@host:~\u0007output\n")
+        )
+    }
+
+    @Test
+    fun keepsTabsAndNewlinesButRemovesOtherControlCharacters() {
+        val sanitizer = TerminalOutputSanitizer()
+
+        assertEquals("a\tb\nc", sanitizer.clean("a\tb\r\n\u0000c"))
+    }
+}

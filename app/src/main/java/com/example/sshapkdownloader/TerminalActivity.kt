@@ -32,6 +32,7 @@ class TerminalActivity : Activity() {
     private lateinit var sendButton: Button
     private lateinit var disconnectButton: Button
     private val outputBuffer = StringBuilder()
+    private val outputSanitizer = TerminalOutputSanitizer()
     private val writerLock = Any()
 
     @Volatile
@@ -219,7 +220,9 @@ class TerminalActivity : Activity() {
 
                 val shell = sshSession.openChannel("shell") as ChannelShell
                 shell.setPty(true)
-                shell.setPtyType("xterm")
+                shell.setPtyType("dumb")
+                shell.setEnv("TERM", "dumb")
+                shell.setEnv("NO_COLOR", "1")
                 val remoteInput = shell.inputStream
                 val remoteOutput = shell.outputStream
                 channel = shell
@@ -252,8 +255,9 @@ class TerminalActivity : Activity() {
                 break
             }
             val text = String(buffer, 0, bytesRead, Charsets.UTF_8)
+            val cleanText = outputSanitizer.clean(text)
             runOnUiThread {
-                appendOutput(text)
+                appendOutput(cleanText)
             }
         }
 
@@ -315,7 +319,15 @@ class TerminalActivity : Activity() {
     }
 
     private fun appendOutput(text: String) {
-        outputBuffer.append(text)
+        text.forEach { char ->
+            if (char == '\b') {
+                if (outputBuffer.isNotEmpty()) {
+                    outputBuffer.deleteAt(outputBuffer.length - 1)
+                }
+            } else {
+                outputBuffer.append(char)
+            }
+        }
         if (outputBuffer.length > MAX_OUTPUT_CHARS) {
             outputBuffer.delete(0, outputBuffer.length - MAX_OUTPUT_CHARS)
         }
