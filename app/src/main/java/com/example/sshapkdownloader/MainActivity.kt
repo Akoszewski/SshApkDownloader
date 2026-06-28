@@ -76,6 +76,22 @@ class MainActivity : Activity() {
         })
 
         header.addView(Button(this).apply {
+            text = "Terminal"
+            textSize = 12f
+            setTextColor(Color.WHITE)
+            backgroundTintList = ColorStateList.valueOf(TERMINAL)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                rightMargin = dp(8)
+            }
+            setOnClickListener {
+                openTerminal()
+            }
+        })
+
+        header.addView(Button(this).apply {
             text = "Configuration"
             textSize = 12f
             setTextColor(PRIMARY)
@@ -116,21 +132,6 @@ class MainActivity : Activity() {
             }
             setOnClickListener {
                 connectAndLoadApks()
-            }
-        })
-
-        content.addView(Button(this).apply {
-            text = "Terminal"
-            setTextColor(Color.WHITE)
-            backgroundTintList = ColorStateList.valueOf(TERMINAL)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = dp(22)
-            }
-            setOnClickListener {
-                openTerminal()
             }
         })
 
