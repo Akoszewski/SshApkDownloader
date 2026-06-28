@@ -61,7 +61,7 @@ class TerminalActivity : Activity() {
     private fun createContentView(): LinearLayout {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(18), dp(16), dp(16))
+            setPadding(dp(16), dp(18), dp(16), dp(32))
             setBackgroundColor(TERMINAL_BACKGROUND)
         }
 
@@ -167,13 +167,14 @@ class TerminalActivity : Activity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 topMargin = dp(8)
+                bottomMargin = dp(8)
             }
         }
 
         shortcutRow.addView(Button(this).apply {
             text = "Ctrl+C"
-            setTextColor(TEXT_PRIMARY)
-            backgroundTintList = ColorStateList.valueOf(SURFACE)
+            setTextColor(Color.WHITE)
+            backgroundTintList = ColorStateList.valueOf(DANGER)
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             setOnClickListener {
                 writeToShell(byteArrayOf(3))
@@ -182,8 +183,8 @@ class TerminalActivity : Activity() {
 
         shortcutRow.addView(Button(this).apply {
             text = "Clear"
-            setTextColor(TEXT_PRIMARY)
-            backgroundTintList = ColorStateList.valueOf(SURFACE)
+            setTextColor(Color.WHITE)
+            backgroundTintList = ColorStateList.valueOf(SECONDARY)
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
                 leftMargin = dp(8)
             }
@@ -345,6 +346,7 @@ class TerminalActivity : Activity() {
         private const val OUTPUT_BACKGROUND = 0xFF05070A.toInt()
         private const val SURFACE = 0xFFE5E7EB.toInt()
         private const val PRIMARY = 0xFF2563EB.toInt()
+        private const val SECONDARY = 0xFF475569.toInt()
         private const val DANGER = 0xFFB91C1C.toInt()
         private const val TEXT_PRIMARY = 0xFFF9FAFB.toInt()
         private const val TEXT_MUTED = 0xFF9CA3AF.toInt()
