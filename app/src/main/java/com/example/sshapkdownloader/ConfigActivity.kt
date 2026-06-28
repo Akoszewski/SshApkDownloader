@@ -13,11 +13,17 @@ import android.widget.TextView
 import android.widget.Toast
 
 class ConfigActivity : Activity() {
+    private val preferences by lazy {
+        getSharedPreferences("ssh_apk_downloader", Context.MODE_PRIVATE)
+    }
+
     private lateinit var publicKeyEditText: EditText
+    private lateinit var generateButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(createContentView())
+        restorePublicKey()
     }
 
     private fun createContentView(): LinearLayout {
@@ -31,16 +37,13 @@ class ConfigActivity : Activity() {
             textSize = 24f
         })
 
-        root.addView(Button(this).apply {
+        generateButton = Button(this).apply {
             text = "Generuj klucz"
             setOnClickListener {
-                Toast.makeText(
-                    this@ConfigActivity,
-                    "Generowanie klucza zostanie dodane w kolejnym kroku",
-                    Toast.LENGTH_SHORT
-                ).show()
+                generateKey()
             }
-        })
+        }
+        root.addView(generateButton)
 
         val publicKeyRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -64,6 +67,41 @@ class ConfigActivity : Activity() {
 
         root.addView(publicKeyRow)
         return root
+    }
+
+    private fun restorePublicKey() {
+        publicKeyEditText.setText(preferences.getString("public_ssh_key", ""))
+    }
+
+    private fun generateKey() {
+        generateButton.isEnabled = false
+        Toast.makeText(this, "Generowanie klucza", Toast.LENGTH_SHORT).show()
+
+        Thread {
+            runCatching {
+                SshKeyGenerator.generate()
+            }.onSuccess { keyPair ->
+                preferences.edit()
+                    .putString("private_ssh_key", keyPair.privateKeyPem)
+                    .putString("public_ssh_key", keyPair.publicKeyOpenSsh)
+                    .apply()
+
+                runOnUiThread {
+                    publicKeyEditText.setText(keyPair.publicKeyOpenSsh)
+                    generateButton.isEnabled = true
+                    Toast.makeText(this, "Wygenerowano klucz", Toast.LENGTH_SHORT).show()
+                }
+            }.onFailure { error ->
+                runOnUiThread {
+                    generateButton.isEnabled = true
+                    Toast.makeText(
+                        this,
+                        "Błąd generowania: ${error.message ?: error.javaClass.simpleName}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }.start()
     }
 
     private fun copyPublicKey() {
