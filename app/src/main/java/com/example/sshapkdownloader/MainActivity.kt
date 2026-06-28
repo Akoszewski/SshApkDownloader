@@ -29,7 +29,6 @@ import android.widget.TextView
 import android.widget.Toast
 import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.ChannelSftp
-import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -120,6 +119,21 @@ class MainActivity : Activity() {
             }
         })
 
+        content.addView(Button(this).apply {
+            text = "Terminal"
+            setTextColor(Color.WHITE)
+            backgroundTintList = ColorStateList.valueOf(TERMINAL)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp(22)
+            }
+            setOnClickListener {
+                openTerminal()
+            }
+        })
+
         apkListContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(0, dp(8), 0, 0)
@@ -158,7 +172,7 @@ class MainActivity : Activity() {
 
         Thread {
             runCatching {
-                val session = createSession(SshTargetParser.parse(address), privateKey)
+                val session = SshSessionFactory.create(SshTargetParser.parse(address), privateKey)
                 try {
                     session.connect(15_000)
                     listRemoteApks(session)
@@ -176,21 +190,6 @@ class MainActivity : Activity() {
                 }
             }
         }.start()
-    }
-
-    private fun createSession(target: SshTarget, privateKey: String): Session {
-        val jsch = JSch()
-        jsch.addIdentity(
-            "ssh-apk-downloader-key",
-            privateKey.toByteArray(Charsets.UTF_8),
-            null,
-            null
-        )
-
-        return jsch.getSession(target.username, target.host, target.port).apply {
-            setConfig("StrictHostKeyChecking", "no")
-            timeout = 15_000
-        }
     }
 
     private fun listRemoteApks(session: Session): List<String> {
@@ -273,7 +272,7 @@ class MainActivity : Activity() {
 
         Thread {
             runCatching {
-                val session = createSession(SshTargetParser.parse(address), privateKey)
+                val session = SshSessionFactory.create(SshTargetParser.parse(address), privateKey)
                 try {
                     session.connect(15_000)
                     downloadRemoteApk(session, apkName)
@@ -287,6 +286,19 @@ class MainActivity : Activity() {
                 showToastOnUiThread("Download error: ${error.message ?: error.javaClass.simpleName}")
             }
         }.start()
+    }
+
+    private fun openTerminal() {
+        saveValues()
+        val address = ipAddressEditText.text.toString().trim()
+        val privateKey = getStoredPrivateKey()
+
+        if (address.isEmpty() || privateKey.isBlank()) {
+            showToast("SSH target and generated key are required")
+            return
+        }
+
+        startActivity(Intent(this, TerminalActivity::class.java))
     }
 
     private fun downloadRemoteApk(session: Session, apkName: String): Uri {
@@ -437,6 +449,7 @@ class MainActivity : Activity() {
         private const val SURFACE = 0xFFFFFFFF.toInt()
         private const val PRIMARY = 0xFF2563EB.toInt()
         private const val ACCENT = 0xFF0F766E.toInt()
+        private const val TERMINAL = 0xFF1F2937.toInt()
         private const val TEXT_PRIMARY = 0xFF172033.toInt()
         private const val TEXT_MUTED = 0xFF667085.toInt()
     }
