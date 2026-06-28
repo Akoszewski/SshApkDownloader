@@ -66,7 +66,7 @@ class MainActivity : Activity() {
         })
 
         ipAddressEditText = EditText(this).apply {
-            hint = "IP address"
+            hint = "user@host:port"
             isSingleLine = true
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
             imeOptions = EditorInfo.IME_ACTION_NEXT
@@ -172,13 +172,18 @@ class MainActivity : Activity() {
 
     private fun parseSshTarget(address: String): SshTarget {
         val userSplit = address.split("@", limit = 2)
-        val username = if (userSplit.size == 2) userSplit[0].ifBlank { "debian" } else "debian"
-        val hostAndPort = if (userSplit.size == 2) userSplit[1] else userSplit[0]
+        require(userSplit.size == 2 && userSplit[0].isNotBlank()) {
+            "Address must be in user@host or user@host:port format"
+        }
+
+        val username = userSplit[0].trim()
+        val hostAndPort = userSplit[1]
         val portSplit = hostAndPort.split(":", limit = 2)
         val host = portSplit[0].trim()
         val port = portSplit.getOrNull(1)?.toIntOrNull() ?: 22
 
         require(host.isNotBlank()) { "Host is required" }
+        require(port in 1..65535) { "Port must be between 1 and 65535" }
         return SshTarget(username = username, host = host, port = port)
     }
 

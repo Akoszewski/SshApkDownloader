@@ -12,8 +12,11 @@ Implementation requirements:
 Initial UI:
 
 - On launch, show two single-line text fields:
-  - IP address.
+  - SSH target in `user@host:port` format.
   - SSH key.
+- The SSH target field should use the hint `user@host:port`.
+- The username is required and must be provided before `@`.
+- The port is optional and defaults to the standard SSH port, `22`.
 - Remember both values between launches.
 - The SSH key field must be obscured by default.
 - The SSH key can be shown only after tapping an eye icon next to the field.
