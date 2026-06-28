@@ -4,6 +4,9 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
 import android.text.InputType
 import android.widget.Button
@@ -29,16 +32,28 @@ class ConfigActivity : Activity() {
     private fun createContentView(): LinearLayout {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(32, 36, 32, 32)
+            setPadding(dp(24), dp(28), dp(24), dp(28))
+            setBackgroundColor(SCREEN_BACKGROUND)
         }
 
         root.addView(TextView(this).apply {
             text = "Configuration"
-            textSize = 24f
+            textSize = 26f
+            setTextColor(TEXT_PRIMARY)
+            setTypeface(typeface, Typeface.BOLD)
         })
 
         generateButton = Button(this).apply {
             text = "Generate key"
+            setTextColor(Color.WHITE)
+            backgroundTintList = ColorStateList.valueOf(PRIMARY)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(24)
+                bottomMargin = dp(14)
+            }
             setOnClickListener {
                 generateKey()
             }
@@ -47,10 +62,14 @@ class ConfigActivity : Activity() {
 
         val publicKeyRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
         }
 
         publicKeyEditText = EditText(this).apply {
             hint = "SSH public key"
+            setHintTextColor(TEXT_MUTED)
+            setTextColor(TEXT_PRIMARY)
+            backgroundTintList = ColorStateList.valueOf(PRIMARY)
             isSingleLine = false
             minLines = 4
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
@@ -60,6 +79,14 @@ class ConfigActivity : Activity() {
 
         publicKeyRow.addView(Button(this).apply {
             text = "Copy"
+            setTextColor(PRIMARY)
+            backgroundTintList = ColorStateList.valueOf(SURFACE)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                leftMargin = dp(10)
+            }
             setOnClickListener {
                 copyPublicKey()
             }
@@ -114,5 +141,17 @@ class ConfigActivity : Activity() {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("SSH public key", publicKey))
         Toast.makeText(this, "Public key copied", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
+    }
+
+    companion object {
+        private const val SCREEN_BACKGROUND = 0xFFF5F7FB.toInt()
+        private const val SURFACE = 0xFFFFFFFF.toInt()
+        private const val PRIMARY = 0xFF2563EB.toInt()
+        private const val TEXT_PRIMARY = 0xFF172033.toInt()
+        private const val TEXT_MUTED = 0xFF667085.toInt()
     }
 }

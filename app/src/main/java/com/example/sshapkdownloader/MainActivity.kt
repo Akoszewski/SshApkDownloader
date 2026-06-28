@@ -6,10 +6,13 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.res.ColorStateList
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -56,7 +59,8 @@ class MainActivity : Activity() {
     private fun createContentView(): ScrollView {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(32, 28, 32, 32)
+            setPadding(dp(24), dp(24), dp(24), dp(28))
+            setBackgroundColor(SCREEN_BACKGROUND)
         }
 
         val header = LinearLayout(this).apply {
@@ -66,13 +70,17 @@ class MainActivity : Activity() {
 
         header.addView(TextView(this).apply {
             text = "SshApkDownloader"
-            textSize = 24f
+            textSize = 26f
+            setTextColor(TEXT_PRIMARY)
+            setTypeface(typeface, Typeface.BOLD)
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
 
         header.addView(Button(this).apply {
             text = "Configuration"
             textSize = 12f
+            setTextColor(PRIMARY)
+            backgroundTintList = ColorStateList.valueOf(SURFACE)
             setOnClickListener {
                 startActivity(Intent(this@MainActivity, ConfigActivity::class.java))
             }
@@ -82,11 +90,14 @@ class MainActivity : Activity() {
 
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(0, 48, 0, 0)
+            setPadding(0, dp(42), 0, 0)
         }
 
         ipAddressEditText = EditText(this).apply {
             hint = "user@host:port"
+            setHintTextColor(TEXT_MUTED)
+            setTextColor(TEXT_PRIMARY)
+            backgroundTintList = ColorStateList.valueOf(PRIMARY)
             isSingleLine = true
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
             imeOptions = EditorInfo.IME_ACTION_NEXT
@@ -95,6 +106,15 @@ class MainActivity : Activity() {
 
         content.addView(Button(this).apply {
             text = "Connect"
+            setTextColor(Color.WHITE)
+            backgroundTintList = ColorStateList.valueOf(PRIMARY)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(14)
+                bottomMargin = dp(22)
+            }
             setOnClickListener {
                 connectAndLoadApks()
             }
@@ -102,6 +122,7 @@ class MainActivity : Activity() {
 
         apkListContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(8), 0, 0)
         }
         content.addView(apkListContainer)
 
@@ -215,6 +236,7 @@ class MainActivity : Activity() {
             apkListContainer.addView(TextView(this).apply {
                 text = "No APK files found"
                 textSize = 16f
+                setTextColor(TEXT_MUTED)
             })
             return
         }
@@ -222,6 +244,14 @@ class MainActivity : Activity() {
         apkNames.forEach { apkName ->
             apkListContainer.addView(Button(this).apply {
                 text = apkName
+                setTextColor(Color.WHITE)
+                backgroundTintList = ColorStateList.valueOf(ACCENT)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dp(10)
+                }
                 setOnClickListener {
                     downloadApk(apkName)
                 }
@@ -376,6 +406,10 @@ class MainActivity : Activity() {
         return getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
+    }
+
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
@@ -399,5 +433,11 @@ class MainActivity : Activity() {
     companion object {
         private const val DOWNLOAD_CHANNEL_ID = "apk_downloads"
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 100
+        private const val SCREEN_BACKGROUND = 0xFFF5F7FB.toInt()
+        private const val SURFACE = 0xFFFFFFFF.toInt()
+        private const val PRIMARY = 0xFF2563EB.toInt()
+        private const val ACCENT = 0xFF0F766E.toInt()
+        private const val TEXT_PRIMARY = 0xFF172033.toInt()
+        private const val TEXT_MUTED = 0xFF667085.toInt()
     }
 }

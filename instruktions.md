@@ -26,6 +26,8 @@ Initial UI:
 - Next to the public key text field, show a `Copy` button that copies the public key to the clipboard.
 - Store the generated private key internally for SSH connections.
 - Show a `Connect` button below the SSH target field.
+- Keep clear vertical spacing between the `Connect` button and the APK download buttons.
+- Use a polished visual style with consistent colors, readable text contrast, and comfortable spacing.
 
 Connection behavior:
 
