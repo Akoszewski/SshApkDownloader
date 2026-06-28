@@ -13,8 +13,18 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import com.jcraft.jsch.ChannelExec
+import com.jcraft.jsch.JSch
+import com.jcraft.jsch.Session
+import java.io.ByteArrayOutputStream
 
 class MainActivity : Activity() {
+    private data class SshTarget(
+        val username: String,
+        val host: String,
+        val port: Int
+    )
+
     private val preferences by lazy {
         getSharedPreferences("ssh_apk_downloader", Context.MODE_PRIVATE)
     }
@@ -81,8 +91,7 @@ class MainActivity : Activity() {
         root.addView(Button(this).apply {
             text = "Connect"
             setOnClickListener {
-                saveValues()
-                Toast.makeText(this@MainActivity, "Connect pressed", Toast.LENGTH_SHORT).show()
+                connectAndLoadApks()
             }
         })
 
@@ -116,5 +125,128 @@ class MainActivity : Activity() {
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         }
         sshKeyEditText.setSelection(sshKeyEditText.text.length)
+    }
+
+    private fun connectAndLoadApks() {
+        saveValues()
+        val address = ipAddressEditText.text.toString().trim()
+        val privateKey = sshKeyEditText.text.toString()
+
+        if (address.isEmpty() || privateKey.isBlank()) {
+            showToast("IP address and SSH key are required")
+            return
+        }
+
+        apkListContainer.removeAllViews()
+        showToast("Connecting")
+
+        Thread {
+            runCatching {
+                val session = createSession(parseSshTarget(address), privateKey)
+                try {
+                    session.connect(15_000)
+                    listRemoteApks(session)
+                } finally {
+                    session.disconnect()
+                }
+            }.onSuccess { apkNames ->
+                runOnUiThread {
+                    displayApkButtons(apkNames)
+                }
+            }.onFailure { error ->
+                runOnUiThread {
+                    apkListContainer.removeAllViews()
+                    showToast("SSH error: ${error.message ?: error.javaClass.simpleName}")
+                }
+            }
+        }.start()
+    }
+
+    private fun parseSshTarget(address: String): SshTarget {
+        val userSplit = address.split("@", limit = 2)
+        val username = if (userSplit.size == 2) userSplit[0].ifBlank { "debian" } else "debian"
+        val hostAndPort = if (userSplit.size == 2) userSplit[1] else userSplit[0]
+        val portSplit = hostAndPort.split(":", limit = 2)
+        val host = portSplit[0].trim()
+        val port = portSplit.getOrNull(1)?.toIntOrNull() ?: 22
+
+        require(host.isNotBlank()) { "Host is required" }
+        return SshTarget(username = username, host = host, port = port)
+    }
+
+    private fun createSession(target: SshTarget, privateKey: String): Session {
+        val jsch = JSch()
+        jsch.addIdentity(
+            "ssh-apk-downloader-key",
+            privateKey.toByteArray(Charsets.UTF_8),
+            null,
+            null
+        )
+
+        return jsch.getSession(target.username, target.host, target.port).apply {
+            setConfig("StrictHostKeyChecking", "no")
+            timeout = 15_000
+        }
+    }
+
+    private fun listRemoteApks(session: Session): List<String> {
+        val command = "find ~/Artifacts/android -maxdepth 1 -type f -name '*.apk' -printf '%f\\n' | sort"
+        val output = executeRemoteCommand(session, command)
+        return output.lineSequence()
+            .map { it.trim() }
+            .filter { it.endsWith(".apk") }
+            .toList()
+    }
+
+    private fun executeRemoteCommand(session: Session, command: String): String {
+        val channel = session.openChannel("exec") as ChannelExec
+        val output = ByteArrayOutputStream()
+        val errorOutput = ByteArrayOutputStream()
+
+        channel.setCommand(command)
+        channel.outputStream = output
+        channel.setErrStream(errorOutput)
+        channel.connect(15_000)
+
+        while (!channel.isClosed) {
+            Thread.sleep(100)
+        }
+
+        val exitStatus = channel.exitStatus
+        channel.disconnect()
+
+        if (exitStatus != 0) {
+            val message = errorOutput.toString(Charsets.UTF_8.name()).ifBlank {
+                "Remote command failed with exit status $exitStatus"
+            }
+            error(message)
+        }
+
+        return output.toString(Charsets.UTF_8.name())
+    }
+
+    private fun displayApkButtons(apkNames: List<String>) {
+        apkListContainer.removeAllViews()
+
+        if (apkNames.isEmpty()) {
+            apkListContainer.addView(TextView(this).apply {
+                text = "No APK files found"
+                textSize = 16f
+            })
+            return
+        }
+
+        apkNames.forEach { apkName ->
+            apkListContainer.addView(Button(this).apply {
+                text = apkName
+                setOnClickListener {
+                    showToast("Download not implemented yet")
+                }
+            })
+        }
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
