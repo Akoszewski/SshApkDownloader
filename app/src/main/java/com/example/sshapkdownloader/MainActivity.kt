@@ -27,12 +27,6 @@ import java.io.File
 import java.io.OutputStream
 
 class MainActivity : Activity() {
-    private data class SshTarget(
-        val username: String,
-        val host: String,
-        val port: Int
-    )
-
     private val preferences by lazy {
         getSharedPreferences("ssh_apk_downloader", Context.MODE_PRIVATE)
     }
@@ -150,7 +144,7 @@ class MainActivity : Activity() {
 
         Thread {
             runCatching {
-                val session = createSession(parseSshTarget(address), privateKey)
+                val session = createSession(SshTargetParser.parse(address), privateKey)
                 try {
                     session.connect(15_000)
                     listRemoteApks(session)
@@ -168,23 +162,6 @@ class MainActivity : Activity() {
                 }
             }
         }.start()
-    }
-
-    private fun parseSshTarget(address: String): SshTarget {
-        val userSplit = address.split("@", limit = 2)
-        require(userSplit.size == 2 && userSplit[0].isNotBlank()) {
-            "Address must be in user@host or user@host:port format"
-        }
-
-        val username = userSplit[0].trim()
-        val hostAndPort = userSplit[1]
-        val portSplit = hostAndPort.split(":", limit = 2)
-        val host = portSplit[0].trim()
-        val port = portSplit.getOrNull(1)?.toIntOrNull() ?: 22
-
-        require(host.isNotBlank()) { "Host is required" }
-        require(port in 1..65535) { "Port must be between 1 and 65535" }
-        return SshTarget(username = username, host = host, port = port)
     }
 
     private fun createSession(target: SshTarget, privateKey: String): Session {
@@ -273,7 +250,7 @@ class MainActivity : Activity() {
 
         Thread {
             runCatching {
-                val session = createSession(parseSshTarget(address), privateKey)
+                val session = createSession(SshTargetParser.parse(address), privateKey)
                 try {
                     session.connect(15_000)
                     downloadRemoteApk(session, apkName)
@@ -289,8 +266,7 @@ class MainActivity : Activity() {
     }
 
     private fun downloadRemoteApk(session: Session, apkName: String) {
-        require(apkName.endsWith(".apk")) { "Only APK files can be downloaded" }
-        require(!apkName.contains("/") && !apkName.contains("\\")) { "Invalid APK filename" }
+        ApkNameValidator.requireValid(apkName)
 
         val channel = session.openChannel("sftp") as ChannelSftp
         channel.connect(15_000)
