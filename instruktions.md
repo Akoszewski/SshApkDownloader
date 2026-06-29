@@ -57,3 +57,10 @@ Development process:
 7. Add frontend fields and the `Connect` button only, then commit.
 8. Add SSH/SCP backend that lists APK files and displays buttons, then commit.
 9. Add APK downloading from the file buttons, then commit.
+
+Do rozważenia:
+  1. Termux terminal-view/emulator
+  2. Podpiąć SSH ChannelShell input/output do emulatora
+  3. Ustawić PTY: xterm-256color
+  4. Przekazywać rozmiar terminala przez setPtySize(...)
+  5. Obsłużyć klawiaturę specjalną: Ctrl, Esc, Tab, strzałki

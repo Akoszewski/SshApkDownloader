@@ -102,6 +102,12 @@ class TerminalActivity : Activity() {
                 @Suppress("DEPRECATION")
                 insets.systemWindowInsetBottom
             }
+            val statusTopInset = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                insets.getInsets(WindowInsets.Type.statusBars()).top
+            } else {
+                @Suppress("DEPRECATION")
+                insets.systemWindowInsetTop
+            }
             val navigationBottomInset = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 insets.getInsets(WindowInsets.Type.navigationBars()).bottom
             } else {
@@ -111,10 +117,11 @@ class TerminalActivity : Activity() {
 
             view.setPadding(
                 initialPaddingLeft,
-                initialPaddingTop,
+                initialPaddingTop + statusTopInset,
                 initialPaddingRight,
                 initialPaddingBottom + extraKeyboardPadding
             )
+            scrollOutputToBottom()
             insets
         }
     }
@@ -269,8 +276,17 @@ class TerminalActivity : Activity() {
             outputBuffer.delete(0, outputBuffer.length - MAX_OUTPUT_CHARS)
         }
         outputTextView.text = outputBuffer
+        scrollOutputToBottom()
+    }
+
+    private fun scrollOutputToBottom() {
         outputScrollView.post {
-            outputScrollView.fullScroll(ScrollView.FOCUS_DOWN)
+            outputTextView.post {
+                val outputContent = outputScrollView.getChildAt(0) ?: return@post
+                val scrollRange = (outputContent.bottom + outputScrollView.paddingBottom - outputScrollView.height)
+                    .coerceAtLeast(0)
+                outputScrollView.scrollTo(0, scrollRange)
+            }
         }
     }
 
