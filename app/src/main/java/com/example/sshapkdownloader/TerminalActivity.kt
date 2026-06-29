@@ -72,7 +72,7 @@ class TerminalActivity : Activity() {
         }
 
         header.addView(TextView(this).apply {
-            text = "SSH Terminal"
+            text = getString(R.string.title_ssh_terminal)
             textSize = 22f
             setTextColor(TEXT_PRIMARY)
             setTypeface(typeface, Typeface.BOLD)
@@ -80,14 +80,14 @@ class TerminalActivity : Activity() {
         })
 
         disconnectButton = Button(this).apply {
-            text = "Disconnect"
+            text = getString(R.string.action_disconnect)
             textSize = 12f
             setTextColor(Color.WHITE)
             backgroundTintList = ColorStateList.valueOf(DANGER)
             setOnClickListener {
                 closedByUser = true
                 disconnectShell()
-                appendOutput("\n[disconnected]\n")
+                appendOutput(getString(R.string.terminal_disconnected))
                 finish()
             }
         }
@@ -124,7 +124,7 @@ class TerminalActivity : Activity() {
         }
 
         commandEditText = EditText(this).apply {
-            hint = "command"
+            hint = getString(R.string.hint_terminal_command)
             setHintTextColor(TEXT_MUTED)
             setTextColor(Color.WHITE)
             backgroundTintList = ColorStateList.valueOf(PRIMARY)
@@ -144,7 +144,7 @@ class TerminalActivity : Activity() {
         controls.addView(commandEditText)
 
         sendButton = Button(this).apply {
-            text = "Send"
+            text = getString(R.string.action_send)
             setTextColor(Color.WHITE)
             backgroundTintList = ColorStateList.valueOf(PRIMARY)
             layoutParams = LinearLayout.LayoutParams(
@@ -173,7 +173,7 @@ class TerminalActivity : Activity() {
         }
 
         shortcutRow.addView(Button(this).apply {
-            text = "Ctrl+C"
+            text = getString(R.string.action_ctrl_c)
             setTextColor(Color.WHITE)
             backgroundTintList = ColorStateList.valueOf(DANGER)
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -183,7 +183,7 @@ class TerminalActivity : Activity() {
         })
 
         shortcutRow.addView(Button(this).apply {
-            text = "Clear"
+            text = getString(R.string.action_clear)
             setTextColor(Color.WHITE)
             backgroundTintList = ColorStateList.valueOf(SECONDARY)
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
@@ -204,13 +204,13 @@ class TerminalActivity : Activity() {
         val privateKey = preferences.getString("private_ssh_key", "").orEmpty()
 
         if (address.isBlank() || privateKey.isBlank()) {
-            Toast.makeText(this, "SSH target and generated key are required", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.message_ssh_target_and_key_required), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
         setTerminalEnabled(false)
-        appendOutput("Connecting to $address...\n")
+        appendOutput(getString(R.string.terminal_connecting, address))
 
         Thread {
             runCatching {
@@ -230,7 +230,7 @@ class TerminalActivity : Activity() {
 
                 shell.connect(15_000)
                 runOnUiThread {
-                    appendOutput("[connected]\n")
+                    appendOutput(getString(R.string.terminal_connected))
                     setTerminalEnabled(true)
                     focusCommandInput()
                 }
@@ -238,7 +238,7 @@ class TerminalActivity : Activity() {
             }.onFailure { error ->
                 if (!closedByUser) {
                     runOnUiThread {
-                        appendOutput("\n[connection error: ${error.message ?: error.javaClass.simpleName}]\n")
+                        appendOutput(getString(R.string.terminal_connection_error, error.displayMessage()))
                         setTerminalEnabled(false)
                     }
                 }
@@ -263,7 +263,7 @@ class TerminalActivity : Activity() {
 
         if (!closedByUser) {
             runOnUiThread {
-                appendOutput("\n[remote shell closed]\n")
+                appendOutput(getString(R.string.terminal_remote_shell_closed))
                 setTerminalEnabled(false)
             }
             disconnectShell()
@@ -284,7 +284,7 @@ class TerminalActivity : Activity() {
     private fun writeToShell(bytes: ByteArray) {
         val output = commandOutput
         if (output == null || channel?.isClosed == true) {
-            Toast.makeText(this, "Terminal is not connected", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.message_terminal_not_connected), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -296,7 +296,7 @@ class TerminalActivity : Activity() {
                 }
             }.onFailure { error ->
                 runOnUiThread {
-                    appendOutput("\n[write error: ${error.message ?: error.javaClass.simpleName}]\n")
+                    appendOutput(getString(R.string.terminal_write_error, error.displayMessage()))
                     setTerminalEnabled(false)
                 }
             }
@@ -350,6 +350,10 @@ class TerminalActivity : Activity() {
 
     private fun dp(value: Int): Int {
         return (value * resources.displayMetrics.density).toInt()
+    }
+
+    private fun Throwable.displayMessage(): String {
+        return message ?: javaClass.simpleName
     }
 
     companion object {

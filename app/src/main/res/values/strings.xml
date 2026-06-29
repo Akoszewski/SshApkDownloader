@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">SshApkDownloader</string>
+
+    <string name="action_terminal">Terminal</string>
+    <string name="action_configuration">Configuration</string>
+    <string name="action_connect">Connect</string>
+    <string name="action_generate_key">Generate key</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="action_send">Send</string>
+    <string name="action_ctrl_c">Ctrl+C</string>
+    <string name="action_clear">Clear</string>
+
+    <string name="hint_ssh_target">user@host:port</string>
+    <string name="hint_ssh_public_key">SSH public key</string>
+    <string name="hint_terminal_command">command</string>
+
+    <string name="title_configuration">Configuration</string>
+    <string name="title_ssh_terminal">SSH Terminal</string>
+
+    <string name="message_ssh_target_and_key_required">SSH target and generated key are required</string>
+    <string name="message_connecting">Connecting</string>
+    <string name="message_ssh_error">SSH error: %1$s</string>
+    <string name="message_no_apk_files_found">No APK files found</string>
+    <string name="message_download_started">Download started: %1$s</string>
+    <string name="message_download_completed">Download completed: %1$s</string>
+    <string name="message_download_error">Download error: %1$s</string>
+    <string name="message_generating_key">Generating key</string>
+    <string name="message_key_generated">Key generated</string>
+    <string name="message_generation_error">Generation error: %1$s</string>
+    <string name="message_no_public_key">No public key</string>
+    <string name="message_public_key_copied">Public key copied</string>
+    <string name="message_terminal_not_connected">Terminal is not connected</string>
+
+    <string name="terminal_connecting">Connecting to %1$s...\n</string>
+    <string name="terminal_connected">[connected]\n</string>
+    <string name="terminal_disconnected">\n[disconnected]\n</string>
+    <string name="terminal_connection_error">\n[connection error: %1$s]\n</string>
+    <string name="terminal_remote_shell_closed">\n[remote shell closed]\n</string>
+    <string name="terminal_write_error">\n[write error: %1$s]\n</string>
+
+    <string name="clipboard_ssh_public_key">SSH public key</string>
+    <string name="notification_apk_downloaded">APK downloaded</string>
+    <string name="notification_channel_apk_downloads">APK downloads</string>
+</resources>

@@ -37,14 +37,14 @@ class ConfigActivity : Activity() {
         }
 
         root.addView(TextView(this).apply {
-            text = "Configuration"
+            text = getString(R.string.title_configuration)
             textSize = 26f
             setTextColor(TEXT_PRIMARY)
             setTypeface(typeface, Typeface.BOLD)
         })
 
         generateButton = Button(this).apply {
-            text = "Generate key"
+            text = getString(R.string.action_generate_key)
             setTextColor(Color.WHITE)
             backgroundTintList = ColorStateList.valueOf(PRIMARY)
             layoutParams = LinearLayout.LayoutParams(
@@ -66,7 +66,7 @@ class ConfigActivity : Activity() {
         }
 
         publicKeyEditText = EditText(this).apply {
-            hint = "SSH public key"
+            hint = getString(R.string.hint_ssh_public_key)
             setHintTextColor(TEXT_MUTED)
             setTextColor(TEXT_PRIMARY)
             backgroundTintList = ColorStateList.valueOf(PRIMARY)
@@ -78,7 +78,7 @@ class ConfigActivity : Activity() {
         publicKeyRow.addView(publicKeyEditText)
 
         publicKeyRow.addView(Button(this).apply {
-            text = "Copy"
+            text = getString(R.string.action_copy)
             setTextColor(PRIMARY)
             backgroundTintList = ColorStateList.valueOf(SURFACE)
             layoutParams = LinearLayout.LayoutParams(
@@ -102,7 +102,7 @@ class ConfigActivity : Activity() {
 
     private fun generateKey() {
         generateButton.isEnabled = false
-        Toast.makeText(this, "Generating key", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.message_generating_key), Toast.LENGTH_SHORT).show()
 
         Thread {
             runCatching {
@@ -116,14 +116,14 @@ class ConfigActivity : Activity() {
                 runOnUiThread {
                     publicKeyEditText.setText(keyPair.publicKeyOpenSsh)
                     generateButton.isEnabled = true
-                    Toast.makeText(this, "Key generated", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.message_key_generated), Toast.LENGTH_SHORT).show()
                 }
             }.onFailure { error ->
                 runOnUiThread {
                     generateButton.isEnabled = true
                     Toast.makeText(
                         this,
-                        "Generation error: ${error.message ?: error.javaClass.simpleName}",
+                        getString(R.string.message_generation_error, error.displayMessage()),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -134,17 +134,21 @@ class ConfigActivity : Activity() {
     private fun copyPublicKey() {
         val publicKey = publicKeyEditText.text.toString()
         if (publicKey.isBlank()) {
-            Toast.makeText(this, "No public key", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.message_no_public_key), Toast.LENGTH_SHORT).show()
             return
         }
 
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("SSH public key", publicKey))
-        Toast.makeText(this, "Public key copied", Toast.LENGTH_SHORT).show()
+        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.clipboard_ssh_public_key), publicKey))
+        Toast.makeText(this, getString(R.string.message_public_key_copied), Toast.LENGTH_SHORT).show()
     }
 
     private fun dp(value: Int): Int {
         return (value * resources.displayMetrics.density).toInt()
+    }
+
+    private fun Throwable.displayMessage(): String {
+        return message ?: javaClass.simpleName
     }
 
     companion object {

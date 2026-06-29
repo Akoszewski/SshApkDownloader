@@ -68,7 +68,7 @@ class MainActivity : Activity() {
         }
 
         header.addView(TextView(this).apply {
-            text = "SshApkDownloader"
+            text = getString(R.string.app_name)
             textSize = 26f
             setTextColor(TEXT_PRIMARY)
             setTypeface(typeface, Typeface.BOLD)
@@ -76,7 +76,7 @@ class MainActivity : Activity() {
         })
 
         header.addView(Button(this).apply {
-            text = "Terminal"
+            text = getString(R.string.action_terminal)
             textSize = 12f
             setTextColor(Color.WHITE)
             backgroundTintList = ColorStateList.valueOf(TERMINAL)
@@ -92,7 +92,7 @@ class MainActivity : Activity() {
         })
 
         header.addView(Button(this).apply {
-            text = "Configuration"
+            text = getString(R.string.action_configuration)
             textSize = 12f
             setTextColor(PRIMARY)
             backgroundTintList = ColorStateList.valueOf(SURFACE)
@@ -109,7 +109,7 @@ class MainActivity : Activity() {
         }
 
         ipAddressEditText = EditText(this).apply {
-            hint = "user@host:port"
+            hint = getString(R.string.hint_ssh_target)
             setHintTextColor(TEXT_MUTED)
             setTextColor(TEXT_PRIMARY)
             backgroundTintList = ColorStateList.valueOf(PRIMARY)
@@ -120,7 +120,7 @@ class MainActivity : Activity() {
         content.addView(ipAddressEditText)
 
         content.addView(Button(this).apply {
-            text = "Connect"
+            text = getString(R.string.action_connect)
             setTextColor(Color.WHITE)
             backgroundTintList = ColorStateList.valueOf(PRIMARY)
             layoutParams = LinearLayout.LayoutParams(
@@ -164,12 +164,12 @@ class MainActivity : Activity() {
         val privateKey = getStoredPrivateKey()
 
         if (address.isEmpty() || privateKey.isBlank()) {
-            showToast("SSH target and generated key are required")
+            showToast(getString(R.string.message_ssh_target_and_key_required))
             return
         }
 
         apkListContainer.removeAllViews()
-        showToast("Connecting")
+        showToast(getString(R.string.message_connecting))
 
         Thread {
             runCatching {
@@ -187,7 +187,7 @@ class MainActivity : Activity() {
             }.onFailure { error ->
                 runOnUiThread {
                     apkListContainer.removeAllViews()
-                    showToast("SSH error: ${error.message ?: error.javaClass.simpleName}")
+                    showToast(getString(R.string.message_ssh_error, error.displayMessage()))
                 }
             }
         }.start()
@@ -234,7 +234,7 @@ class MainActivity : Activity() {
 
         if (apkNames.isEmpty()) {
             apkListContainer.addView(TextView(this).apply {
-                text = "No APK files found"
+                text = getString(R.string.message_no_apk_files_found)
                 textSize = 16f
                 setTextColor(TEXT_MUTED)
             })
@@ -265,11 +265,11 @@ class MainActivity : Activity() {
         val privateKey = getStoredPrivateKey()
 
         if (address.isEmpty() || privateKey.isBlank()) {
-            showToast("SSH target and generated key are required")
+            showToast(getString(R.string.message_ssh_target_and_key_required))
             return
         }
 
-        showToast("Download started: $apkName")
+        showToast(getString(R.string.message_download_started, apkName))
 
         Thread {
             runCatching {
@@ -281,10 +281,10 @@ class MainActivity : Activity() {
                     session.disconnect()
                 }
             }.onSuccess { apkUri ->
-                showToastOnUiThread("Download completed: $apkName")
+                showToastOnUiThread(getString(R.string.message_download_completed, apkName))
                 showDownloadedNotification(apkName, apkUri)
             }.onFailure { error ->
-                showToastOnUiThread("Download error: ${error.message ?: error.javaClass.simpleName}")
+                showToastOnUiThread(getString(R.string.message_download_error, error.displayMessage()))
             }
         }.start()
     }
@@ -295,7 +295,7 @@ class MainActivity : Activity() {
         val privateKey = getStoredPrivateKey()
 
         if (address.isEmpty() || privateKey.isBlank()) {
-            showToast("SSH target and generated key are required")
+            showToast(getString(R.string.message_ssh_target_and_key_required))
             return
         }
 
@@ -376,7 +376,7 @@ class MainActivity : Activity() {
 
         val notification = notificationBuilder()
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle("APK downloaded")
+            .setContentTitle(getString(R.string.notification_apk_downloaded))
             .setContentText(apkName)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
@@ -392,7 +392,7 @@ class MainActivity : Activity() {
 
         val channel = NotificationChannel(
             DOWNLOAD_CHANNEL_ID,
-            "APK downloads",
+            getString(R.string.notification_channel_apk_downloads),
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager().createNotificationChannel(channel)
@@ -435,6 +435,10 @@ class MainActivity : Activity() {
         runOnUiThread {
             showToast(message)
         }
+    }
+
+    private fun Throwable.displayMessage(): String {
+        return message ?: javaClass.simpleName
     }
 
     private data class DownloadDestination(
