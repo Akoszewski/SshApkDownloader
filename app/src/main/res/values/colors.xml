@@ -1,0 +1,18 @@
+<resources>
+    <color name="screen_background">#F5F7FB</color>
+    <color name="terminal_background">#111827</color>
+    <color name="terminal_output_background">#05070A</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="terminal_surface">#E5E7EB</color>
+    <color name="primary">#2563EB</color>
+    <color name="accent">#0F766E</color>
+    <color name="terminal_button">#1F2937</color>
+    <color name="secondary">#475569</color>
+    <color name="danger">#B91C1C</color>
+    <color name="text_primary">#172033</color>
+    <color name="text_muted">#667085</color>
+    <color name="terminal_text_primary">#F9FAFB</color>
+    <color name="terminal_text_muted">#9CA3AF</color>
+    <color name="terminal_text">#B7F7C8</color>
+    <color name="white">#FFFFFF</color>
+</resources>

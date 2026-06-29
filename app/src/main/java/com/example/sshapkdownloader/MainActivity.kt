@@ -12,19 +12,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.text.InputType
-import android.view.Gravity
-import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import com.jcraft.jsch.ChannelExec
@@ -46,106 +41,24 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         createNotificationChannel()
         requestNotificationPermission()
-        setContentView(createContentView())
+        setContentView(R.layout.activity_main)
+        ipAddressEditText = findViewById(R.id.ipAddressEditText)
+        apkListContainer = findViewById(R.id.apkListContainer)
+        findViewById<Button>(R.id.terminalButton).setOnClickListener {
+            openTerminal()
+        }
+        findViewById<Button>(R.id.configurationButton).setOnClickListener {
+            startActivity(Intent(this, ConfigActivity::class.java))
+        }
+        findViewById<Button>(R.id.connectButton).setOnClickListener {
+            connectAndLoadApks()
+        }
         restoreSavedValues()
     }
 
     override fun onPause() {
         super.onPause()
         saveValues()
-    }
-
-    private fun createContentView(): ScrollView {
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(24), dp(24), dp(24), dp(28))
-            setBackgroundColor(SCREEN_BACKGROUND)
-        }
-
-        val header = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-
-        header.addView(TextView(this).apply {
-            text = getString(R.string.app_name)
-            textSize = 26f
-            setTextColor(TEXT_PRIMARY)
-            setTypeface(typeface, Typeface.BOLD)
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        })
-
-        header.addView(Button(this).apply {
-            text = getString(R.string.action_terminal)
-            textSize = 12f
-            setTextColor(Color.WHITE)
-            backgroundTintList = ColorStateList.valueOf(TERMINAL)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                rightMargin = dp(8)
-            }
-            setOnClickListener {
-                openTerminal()
-            }
-        })
-
-        header.addView(Button(this).apply {
-            text = getString(R.string.action_configuration)
-            textSize = 12f
-            setTextColor(PRIMARY)
-            backgroundTintList = ColorStateList.valueOf(SURFACE)
-            setOnClickListener {
-                startActivity(Intent(this@MainActivity, ConfigActivity::class.java))
-            }
-        })
-
-        root.addView(header)
-
-        val content = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, dp(42), 0, 0)
-        }
-
-        ipAddressEditText = EditText(this).apply {
-            hint = getString(R.string.hint_ssh_target)
-            setHintTextColor(TEXT_MUTED)
-            setTextColor(TEXT_PRIMARY)
-            backgroundTintList = ColorStateList.valueOf(PRIMARY)
-            isSingleLine = true
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
-            imeOptions = EditorInfo.IME_ACTION_NEXT
-        }
-        content.addView(ipAddressEditText)
-
-        content.addView(Button(this).apply {
-            text = getString(R.string.action_connect)
-            setTextColor(Color.WHITE)
-            backgroundTintList = ColorStateList.valueOf(PRIMARY)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = dp(14)
-                bottomMargin = dp(22)
-            }
-            setOnClickListener {
-                connectAndLoadApks()
-            }
-        })
-
-        apkListContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, dp(8), 0, 0)
-        }
-        content.addView(apkListContainer)
-
-        root.addView(content)
-
-        return ScrollView(this).apply {
-            addView(root)
-        }
     }
 
     private fun restoreSavedValues() {
@@ -236,7 +149,7 @@ class MainActivity : Activity() {
             apkListContainer.addView(TextView(this).apply {
                 text = getString(R.string.message_no_apk_files_found)
                 textSize = 16f
-                setTextColor(TEXT_MUTED)
+                setTextColor(getColor(R.color.text_muted))
             })
             return
         }
@@ -245,7 +158,7 @@ class MainActivity : Activity() {
             apkListContainer.addView(Button(this).apply {
                 text = apkName
                 setTextColor(Color.WHITE)
-                backgroundTintList = ColorStateList.valueOf(ACCENT)
+                backgroundTintList = ColorStateList.valueOf(getColor(R.color.accent))
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -450,12 +363,5 @@ class MainActivity : Activity() {
     companion object {
         private const val DOWNLOAD_CHANNEL_ID = "apk_downloads"
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 100
-        private const val SCREEN_BACKGROUND = 0xFFF5F7FB.toInt()
-        private const val SURFACE = 0xFFFFFFFF.toInt()
-        private const val PRIMARY = 0xFF2563EB.toInt()
-        private const val ACCENT = 0xFF0F766E.toInt()
-        private const val TERMINAL = 0xFF1F2937.toInt()
-        private const val TEXT_PRIMARY = 0xFF172033.toInt()
-        private const val TEXT_MUTED = 0xFF667085.toInt()
     }
 }
