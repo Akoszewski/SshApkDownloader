@@ -5,13 +5,21 @@ import org.junit.Test
 
 class TerminalOutputSanitizerTest {
     @Test
-    fun stripsAnsiColorSequences() {
+    fun keepsAnsiColorSequences() {
         val sanitizer = TerminalOutputSanitizer()
 
         assertEquals(
-            "file.apk\n",
+            "\u001B[01;32mfile.apk\u001B[0m\n",
             sanitizer.clean("\u001B[01;32mfile.apk\u001B[0m\r\n")
         )
+    }
+
+    @Test
+    fun keepsAnsiColorSequencesSplitAcrossChunks() {
+        val sanitizer = TerminalOutputSanitizer()
+
+        assertEquals("", sanitizer.clean("\u001B[01;"))
+        assertEquals("\u001B[01;32mfile.apk", sanitizer.clean("32mfile.apk"))
     }
 
     @Test

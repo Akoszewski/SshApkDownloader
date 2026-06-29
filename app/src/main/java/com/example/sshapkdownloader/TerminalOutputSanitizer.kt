@@ -15,6 +15,9 @@ class TerminalOutputSanitizer {
             if (consumed == -1) {
                 return ""
             }
+            if (isSgrSequence(pending, 0, consumed)) {
+                output.append(pending.substring(0, consumed))
+            }
             pendingEscape.clear()
             index = consumed - pendingLength
             if (index < 0) {
@@ -29,6 +32,9 @@ class TerminalOutputSanitizer {
                     if (consumed == -1) {
                         pendingEscape.append(text.substring(index))
                         break
+                    }
+                    if (isSgrSequence(text, index, consumed)) {
+                        output.append(text.substring(index, consumed))
                     }
                     index = consumed
                 }
@@ -51,6 +57,10 @@ class TerminalOutputSanitizer {
         }
 
         return output.toString()
+    }
+
+    private fun isSgrSequence(text: String, start: Int, end: Int): Boolean {
+        return end > start + 2 && text[start + 1] == '[' && text[end - 1] == 'm'
     }
 
     private fun consumeEscapeSequence(text: String, start: Int): Int {
