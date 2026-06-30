@@ -28,7 +28,9 @@ class TerminalActivity : Activity() {
     private lateinit var commandEditText: EditText
     private lateinit var sendButton: Button
     private lateinit var disconnectButton: Button
-    private val terminalScreenBuffer = TerminalScreenBuffer()
+    private val terminalScreenBuffer = TerminalScreenBuffer { bytes ->
+        writeToShell(bytes)
+    }
     private val writerLock = Any()
 
     @Volatile
@@ -74,7 +76,7 @@ class TerminalActivity : Activity() {
         }
         findViewById<Button>(R.id.clearButton).setOnClickListener {
             terminalScreenBuffer.clear()
-            outputTextView.text = terminalScreenBuffer.renderStyled()
+            renderTerminalOutput()
         }
         connectShell()
     }
@@ -177,9 +179,9 @@ class TerminalActivity : Activity() {
             if (bytesRead < 0) {
                 break
             }
-            val text = String(buffer, 0, bytesRead, Charsets.UTF_8)
+            val bytes = buffer.copyOf(bytesRead)
             runOnUiThread {
-                appendOutput(text)
+                appendOutput(bytes)
             }
         }
 
@@ -267,6 +269,15 @@ class TerminalActivity : Activity() {
 
     private fun appendOutput(text: String) {
         terminalScreenBuffer.append(text)
+        renderTerminalOutput()
+    }
+
+    private fun appendOutput(bytes: ByteArray) {
+        terminalScreenBuffer.append(bytes, bytes.size)
+        renderTerminalOutput()
+    }
+
+    private fun renderTerminalOutput() {
         outputTextView.text = terminalScreenBuffer.renderStyled()
         scrollOutputToBottom()
     }
@@ -298,8 +309,8 @@ class TerminalActivity : Activity() {
     }
 
     companion object {
-        private const val TERMINAL_COLUMNS = 120
-        private const val TERMINAL_ROWS = 40
+        private const val TERMINAL_COLUMNS = TerminalScreenBuffer.DEFAULT_COLUMNS
+        private const val TERMINAL_ROWS = TerminalScreenBuffer.DEFAULT_ROWS
         private const val ENTER_KEY = "\r"
         private const val ENTER_KEY_DELAY_MS = 60L
         private val ENTER_KEY_BYTES = ENTER_KEY.toByteArray(Charsets.UTF_8)

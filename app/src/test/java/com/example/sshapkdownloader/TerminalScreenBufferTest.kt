@@ -22,14 +22,14 @@ class TerminalScreenBufferTest {
     fun eraseDisplayClearsTheScreen() {
         val buffer = TerminalScreenBuffer()
 
-        assertEquals("fresh", buffer.append("old\nscreen\u001B[2Jfresh"))
+        assertEquals("fresh", buffer.append("old\r\nscreen\u001B[2J\u001B[Hfresh"))
     }
 
     @Test
     fun cursorMovementCanRewritePreviousLines() {
         val buffer = TerminalScreenBuffer()
 
-        assertEquals("first updated\nsecond", buffer.append("first\nsecond\u001B[1A\u001B[6G updated\u001B[K"))
+        assertEquals("first updated\nsecond", buffer.append("first\r\nsecond\u001B[1A\u001B[6G updated\u001B[K"))
     }
 
     @Test
