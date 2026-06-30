@@ -33,7 +33,6 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
     private lateinit var autocompleteButton: ImageButton
     private lateinit var previousCommandButton: ImageButton
     private lateinit var exitButton: Button
-    private lateinit var disconnectButton: Button
     private var remoteInputPrimed = false
     private var remoteInputPromptColumn: Int? = null
     private var inputSyncGeneration = 0
@@ -49,12 +48,7 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         autocompleteButton = findViewById(R.id.autocompleteButton)
         previousCommandButton = findViewById(R.id.previousCommandButton)
         exitButton = findViewById(R.id.exitButton)
-        disconnectButton = findViewById(R.id.disconnectButton)
         keepCommandInputAboveKeyboard(findViewById(R.id.terminalRoot))
-        disconnectButton.setOnClickListener {
-            TerminalSessionManager.disconnectByUser()
-            finish()
-        }
         commandEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 sendCommand()

@@ -6,7 +6,6 @@
     <string name="action_connect">Connect</string>
     <string name="action_generate_key">Generate key</string>
     <string name="action_copy">Copy</string>
-    <string name="action_disconnect">Disconnect</string>
     <string name="action_send">Send</string>
     <string name="action_exit">Exit</string>
     <string name="action_copy_command">Copy command</string>

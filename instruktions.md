@@ -82,4 +82,4 @@ Terminal behavior:
 - Returning to the terminal screen reattaches the UI to the existing terminal session and renders the current buffered terminal output.
 - The SSH session uses a keep-alive loop while the terminal remains connected.
 - Changing activities must not disconnect the terminal session.
-- Disconnect the terminal session only when the user taps `Disconnect` or removes the app task.
+- Disconnect the terminal session when the user removes the app task.

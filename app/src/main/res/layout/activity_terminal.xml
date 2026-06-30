@@ -16,22 +16,12 @@
         android:orientation="horizontal">
 
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="@string/title_ssh_terminal"
             android:textColor="@color/terminal_text_primary"
             android:textSize="22sp"
             android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/disconnectButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/danger"
-            android:text="@string/action_disconnect"
-            android:textColor="@color/white"
-            android:textSize="12sp" />
     </LinearLayout>
 
     <ScrollView
