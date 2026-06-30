@@ -8,8 +8,10 @@
     <string name="action_copy">Copy</string>
     <string name="action_disconnect">Disconnect</string>
     <string name="action_send">Send</string>
-    <string name="action_ctrl_c">Ctrl+C</string>
-    <string name="action_clear">Clear</string>
+    <string name="action_exit">Exit</string>
+    <string name="action_copy_command">Copy command</string>
+    <string name="action_autocomplete">Autocomplete command</string>
+    <string name="action_previous_command">Previous command</string>
 
     <string name="hint_ssh_target">user@host:port</string>
     <string name="hint_ssh_public_key">SSH public key</string>
@@ -31,6 +33,7 @@
     <string name="message_no_public_key">No public key</string>
     <string name="message_public_key_copied">Public key copied</string>
     <string name="message_terminal_not_connected">Terminal is not connected</string>
+    <string name="message_not_implemented">Not implemented</string>
 
     <string name="terminal_connecting">Connecting to %1$s...\n</string>
     <string name="terminal_connected">[connected]\n</string>

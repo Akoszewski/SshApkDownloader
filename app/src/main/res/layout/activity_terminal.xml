@@ -75,14 +75,25 @@
             android:textColor="@color/white"
             android:textColorHint="@color/terminal_text_muted" />
 
-        <Button
+        <ImageButton
             android:id="@+id/sendButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginStart="8dp"
             android:backgroundTint="@color/primary"
-            android:text="@string/action_send"
-            android:textColor="@color/white" />
+            android:contentDescription="@string/action_send"
+            android:padding="12dp"
+            android:src="@drawable/ic_send_24" />
+
+        <ImageButton
+            android:id="@+id/copyCommandButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@color/primary"
+            android:contentDescription="@string/action_copy_command"
+            android:padding="12dp"
+            android:src="@drawable/ic_content_copy_24" />
     </LinearLayout>
 
     <LinearLayout
@@ -94,22 +105,37 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/ctrlCButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:id="@+id/exitButton"
+            android:layout_width="76dp"
+            android:layout_height="48dp"
             android:backgroundTint="@color/danger"
-            android:text="@string/action_ctrl_c"
-            android:textColor="@color/white" />
+            android:text="@string/action_exit"
+            android:textColor="@color/white"
+            android:textSize="12sp" />
 
-        <Button
-            android:id="@+id/clearButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+        <ImageButton
+            android:id="@+id/autocompleteButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:backgroundTint="@color/secondary"
-            android:text="@string/action_clear"
-            android:textColor="@color/white" />
+            android:backgroundTint="@color/primary"
+            android:contentDescription="@string/action_autocomplete"
+            android:padding="12dp"
+            android:src="@drawable/ic_arrow_forward_24" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/previousCommandButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@color/primary"
+            android:contentDescription="@string/action_previous_command"
+            android:padding="12dp"
+            android:src="@drawable/ic_arrow_upward_24" />
     </LinearLayout>
 </LinearLayout>

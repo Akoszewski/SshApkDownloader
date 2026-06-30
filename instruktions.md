@@ -60,16 +60,20 @@ Development process:
 
 Terminal behavior:
 
+- Before implementing terminal UI changes, think through the command-entry workflow first and keep the controls compact, predictable, and terminal-like.
 - The app includes a separate SSH terminal screen opened from the main screen.
 - The terminal uses an SSH `ChannelShell` connected to the generated private key and configured SSH target.
 - The shell is opened with PTY enabled, `xterm-256color` as the PTY type, and `TERM=xterm-256color`.
 - The app passes the terminal size to the SSH shell with `setPtySize(...)`.
 - Remote shell output is rendered through a `TerminalScreenBuffer` based on the Termux terminal emulator, so common cursor movement, clear-screen, line erase, colors, and bold text sequences are interpreted locally.
 - Terminal output is shown in a scrollable, selectable monospace view.
-- Commands are entered through a single-line command field and sent with the `Send` button or the keyboard send action.
+- Commands are entered through a single-line command field and sent with a square icon button showing a send arrow, or with the keyboard send action.
+- Do not use a text `Send` button in the terminal command bar.
+- Place a second square icon button next to the send button with a copy icon; tapping it copies the current text from the command field at the bottom of the terminal.
 - Sending an empty command sends only Enter.
-- The terminal provides a `Ctrl+C` button that sends byte `0x03` to the remote shell.
-- The `Clear` button resets only the local terminal buffer and refreshes the displayed output; it does not send the remote `clear` command.
+- The terminal provides a compact, narrower `Exit` button that sends Ctrl-C to the remote shell to leave or interrupt an interactive Codex CLI session.
+- Next to the compact `Exit` button, provide a square sideways-arrow button for command autocomplete.
+- At the end of the bottom command bar, provide a square upward-arrow button that recalls the previous command into the command field, matching the behavior of pressing the Up arrow in a terminal shell.
 - The terminal keeps the command input above the on-screen keyboard.
 - While connected, the terminal starts a foreground service and keeps wake/Wi-Fi locks active for the session.
 - The SSH session, shell channel, terminal screen buffer, keep-alive loop, and wake/Wi-Fi locks live outside `TerminalActivity`, so they survive activity recreation and navigation between app screens.

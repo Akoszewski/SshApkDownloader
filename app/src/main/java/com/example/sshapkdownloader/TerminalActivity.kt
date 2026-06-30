@@ -10,6 +10,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -22,7 +23,11 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
     private lateinit var outputTextView: TextView
     private lateinit var outputScrollView: ScrollView
     private lateinit var commandEditText: EditText
-    private lateinit var sendButton: Button
+    private lateinit var sendButton: ImageButton
+    private lateinit var copyCommandButton: ImageButton
+    private lateinit var autocompleteButton: ImageButton
+    private lateinit var previousCommandButton: ImageButton
+    private lateinit var exitButton: Button
     private lateinit var disconnectButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,6 +37,10 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         outputScrollView = findViewById(R.id.outputScrollView)
         commandEditText = findViewById(R.id.commandEditText)
         sendButton = findViewById(R.id.sendButton)
+        copyCommandButton = findViewById(R.id.copyCommandButton)
+        autocompleteButton = findViewById(R.id.autocompleteButton)
+        previousCommandButton = findViewById(R.id.previousCommandButton)
+        exitButton = findViewById(R.id.exitButton)
         disconnectButton = findViewById(R.id.disconnectButton)
         keepCommandInputAboveKeyboard(findViewById(R.id.terminalRoot))
         disconnectButton.setOnClickListener {
@@ -49,11 +58,17 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         sendButton.setOnClickListener {
             sendCommand()
         }
-        findViewById<Button>(R.id.ctrlCButton).setOnClickListener {
-            TerminalSessionManager.sendBytes(byteArrayOf(3))
+        copyCommandButton.setOnClickListener {
+            showNotImplemented()
         }
-        findViewById<Button>(R.id.clearButton).setOnClickListener {
-            TerminalSessionManager.clearOutput()
+        exitButton.setOnClickListener {
+            TerminalSessionManager.sendBytes(CONTROL_C_BYTES)
+        }
+        autocompleteButton.setOnClickListener {
+            showNotImplemented()
+        }
+        previousCommandButton.setOnClickListener {
+            showNotImplemented()
         }
         TerminalSessionManager.attachListener(this)
         connectShell()
@@ -72,6 +87,10 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
     override fun onTerminalEnabledChanged(enabled: Boolean) {
         commandEditText.isEnabled = enabled
         sendButton.isEnabled = enabled
+        copyCommandButton.isEnabled = enabled
+        exitButton.isEnabled = enabled
+        autocompleteButton.isEnabled = enabled
+        previousCommandButton.isEnabled = enabled
         if (enabled) {
             focusCommandInput()
         }
@@ -80,6 +99,10 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
     override fun onTerminalDisconnected() {
         commandEditText.isEnabled = false
         sendButton.isEnabled = false
+        copyCommandButton.isEnabled = false
+        exitButton.isEnabled = false
+        autocompleteButton.isEnabled = false
+        previousCommandButton.isEnabled = false
     }
 
     override fun onTerminalConnectionUnavailable() {
@@ -135,6 +158,10 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
 
         commandEditText.isEnabled = false
         sendButton.isEnabled = false
+        copyCommandButton.isEnabled = false
+        exitButton.isEnabled = false
+        autocompleteButton.isEnabled = false
+        previousCommandButton.isEnabled = false
         TerminalSessionManager.connect(this, address, privateKey)
     }
 
@@ -161,5 +188,13 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         commandEditText.requestFocus()
         val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.showSoftInput(commandEditText, InputMethodManager.SHOW_IMPLICIT)
+    }
+
+    private fun showNotImplemented() {
+        Toast.makeText(this, getString(R.string.message_not_implemented), Toast.LENGTH_SHORT).show()
+    }
+
+    private companion object {
+        val CONTROL_C_BYTES = byteArrayOf(0x03)
     }
 }
