@@ -136,6 +136,7 @@ class TerminalActivity : Activity() {
 
         setTerminalEnabled(false)
         appendOutput(getString(R.string.terminal_connecting, address))
+        TerminalForegroundService.start(this)
 
         Thread {
             runCatching {
@@ -265,6 +266,7 @@ class TerminalActivity : Activity() {
             session?.disconnect()
         }
         session = null
+        TerminalForegroundService.stop(this)
     }
 
     private fun appendOutput(text: String) {

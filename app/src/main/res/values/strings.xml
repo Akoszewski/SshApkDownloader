@@ -42,4 +42,7 @@
     <string name="clipboard_ssh_public_key">SSH public key</string>
     <string name="notification_apk_downloaded">APK downloaded</string>
     <string name="notification_channel_apk_downloads">APK downloads</string>
+    <string name="notification_channel_terminal">SSH terminal</string>
+    <string name="notification_terminal_active">SSH terminal active</string>
+    <string name="notification_terminal_active_detail">Keeping the terminal session connected</string>
 </resources>
