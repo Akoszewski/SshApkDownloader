@@ -63,6 +63,15 @@ class TerminalScreenBuffer(
         return builder
     }
 
+    fun currentLineText(): String {
+        return rowText(emulator.cursorRow)
+    }
+
+    fun currentLineTextAfterColumn(column: Int): String {
+        val line = currentLineText()
+        return line.drop(column.coerceIn(0, line.length)).trimEnd()
+    }
+
     private fun renderPlainText(): String {
         return visibleRows().joinToString("\n") { it.second }
     }
@@ -71,19 +80,23 @@ class TerminalScreenBuffer(
         val screen = emulator.screen
         val rows = mutableListOf<Pair<Int, String>>()
         for (row in 0 until emulator.mRows) {
-            val text = screen.getSelectedText(
-                0,
-                row,
-                emulator.mColumns,
-                row,
-                false,
-                false
-            ).trimEnd()
+            val text = rowText(row)
             if (text.isNotEmpty() || row <= emulator.cursorRow) {
                 rows.add(row to text)
             }
         }
         return rows.dropLastWhile { it.second.isEmpty() }
+    }
+
+    private fun rowText(row: Int): String {
+        return emulator.screen.getSelectedText(
+            0,
+            row,
+            emulator.mColumns,
+            row,
+            false,
+            false
+        ).trimEnd()
     }
 
     private fun applyRowStyles(builder: SpannableStringBuilder, rowStart: Int, row: Int, text: String) {

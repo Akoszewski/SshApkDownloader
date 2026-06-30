@@ -1,9 +1,13 @@
 package com.example.sshapkdownloader
 
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
@@ -16,6 +20,7 @@ import android.widget.TextView
 import android.widget.Toast
 
 class TerminalActivity : Activity(), TerminalSessionManager.Listener {
+    private val mainHandler = Handler(Looper.getMainLooper())
     private val preferences by lazy {
         getSharedPreferences("ssh_apk_downloader", Context.MODE_PRIVATE)
     }
@@ -29,6 +34,9 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
     private lateinit var previousCommandButton: ImageButton
     private lateinit var exitButton: Button
     private lateinit var disconnectButton: Button
+    private var remoteInputPrimed = false
+    private var remoteInputPromptColumn: Int? = null
+    private var inputSyncGeneration = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,16 +67,18 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
             sendCommand()
         }
         copyCommandButton.setOnClickListener {
-            showNotImplemented()
+            copyCommand()
         }
         exitButton.setOnClickListener {
             TerminalSessionManager.sendBytes(CONTROL_C_BYTES)
+            remoteInputPrimed = false
+            remoteInputPromptColumn = null
         }
         autocompleteButton.setOnClickListener {
-            showNotImplemented()
+            sendInputEditingKey(TAB_KEY_BYTES)
         }
         previousCommandButton.setOnClickListener {
-            showNotImplemented()
+            sendInputEditingKey(UP_ARROW_KEY_BYTES)
         }
         TerminalSessionManager.attachListener(this)
         connectShell()
@@ -167,10 +177,62 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
 
     private fun sendCommand() {
         val command = commandEditText.text.toString()
-        TerminalSessionManager.sendCommand(command)
+        if (remoteInputPrimed) {
+            TerminalSessionManager.sendPrimedInputCommand(command)
+            remoteInputPrimed = false
+            remoteInputPromptColumn = null
+        } else {
+            TerminalSessionManager.sendCommand(command)
+        }
         if (command.isNotBlank()) {
             commandEditText.setText("")
         }
+    }
+
+    private fun sendInputEditingKey(keyBytes: ByteArray) {
+        val command = commandEditText.text.toString()
+        val promptColumn = remoteInputPromptColumn ?: TerminalSessionManager.currentInputPromptColumn()
+        remoteInputPrimed = true
+        remoteInputPromptColumn = promptColumn
+        TerminalSessionManager.sendInputEditingKey(command, keyBytes)
+        if (keyBytes.contentEquals(TAB_KEY_BYTES)) {
+            syncCommandInputAfterRemoteEdit(promptColumn, expectedPrefix = command)
+        } else {
+            syncCommandInputAfterRemoteEdit(promptColumn, waitUntilDifferentFrom = command)
+        }
+    }
+
+    private fun syncCommandInputAfterRemoteEdit(
+        promptColumn: Int,
+        expectedPrefix: String? = null,
+        waitUntilDifferentFrom: String? = null,
+        attempt: Int = 1
+    ) {
+        val generation = ++inputSyncGeneration
+        mainHandler.postDelayed({
+            if (generation != inputSyncGeneration || !remoteInputPrimed) {
+                return@postDelayed
+            }
+            val remoteInput = TerminalSessionManager.currentInputAfterPromptColumn(promptColumn)
+            val waitingForEcho = !expectedPrefix.isNullOrEmpty() &&
+                !remoteInput.startsWith(expectedPrefix) &&
+                attempt < INPUT_EDIT_SYNC_MAX_ATTEMPTS
+            val waitingForHistory = waitUntilDifferentFrom != null &&
+                remoteInput == waitUntilDifferentFrom &&
+                attempt < INPUT_EDIT_SYNC_MAX_ATTEMPTS
+            if (waitingForEcho) {
+                syncCommandInputAfterRemoteEdit(promptColumn, expectedPrefix, waitUntilDifferentFrom, attempt + 1)
+                return@postDelayed
+            }
+            if (waitingForHistory) {
+                syncCommandInputAfterRemoteEdit(promptColumn, expectedPrefix, waitUntilDifferentFrom, attempt + 1)
+                return@postDelayed
+            }
+            commandEditText.setText(remoteInput)
+            commandEditText.setSelection(commandEditText.text.length)
+            remoteInputPromptColumn = promptColumn
+            focusCommandInput()
+        }, INPUT_EDIT_SYNC_DELAY_MS)
     }
 
     private fun scrollOutputToBottom() {
@@ -190,11 +252,23 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         inputMethodManager.showSoftInput(commandEditText, InputMethodManager.SHOW_IMPLICIT)
     }
 
-    private fun showNotImplemented() {
-        Toast.makeText(this, getString(R.string.message_not_implemented), Toast.LENGTH_SHORT).show()
+    private fun copyCommand() {
+        val command = commandEditText.text.toString()
+        if (command.isBlank()) {
+            Toast.makeText(this, getString(R.string.message_no_command), Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.clipboard_terminal_command), command))
+        Toast.makeText(this, getString(R.string.message_command_copied), Toast.LENGTH_SHORT).show()
     }
 
     private companion object {
         val CONTROL_C_BYTES = byteArrayOf(0x03)
+        val TAB_KEY_BYTES = byteArrayOf(0x09)
+        val UP_ARROW_KEY_BYTES = "\u001B[A".toByteArray(Charsets.UTF_8)
+        const val INPUT_EDIT_SYNC_DELAY_MS = 150L
+        const val INPUT_EDIT_SYNC_MAX_ATTEMPTS = 6
     }
 }

@@ -33,7 +33,8 @@
     <string name="message_no_public_key">No public key</string>
     <string name="message_public_key_copied">Public key copied</string>
     <string name="message_terminal_not_connected">Terminal is not connected</string>
-    <string name="message_not_implemented">Not implemented</string>
+    <string name="message_no_command">No command</string>
+    <string name="message_command_copied">Command copied</string>
 
     <string name="terminal_connecting">Connecting to %1$s...\n</string>
     <string name="terminal_connected">[connected]\n</string>
@@ -43,6 +44,7 @@
     <string name="terminal_write_error">\n[write error: %1$s]\n</string>
 
     <string name="clipboard_ssh_public_key">SSH public key</string>
+    <string name="clipboard_terminal_command">Terminal command</string>
     <string name="notification_apk_downloaded">APK downloaded</string>
     <string name="notification_channel_apk_downloads">APK downloads</string>
     <string name="notification_channel_terminal">SSH terminal</string>

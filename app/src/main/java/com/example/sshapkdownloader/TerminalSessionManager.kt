@@ -168,6 +168,22 @@ object TerminalSessionManager {
         writeToShell(bytes)
     }
 
+    fun sendInputEditingKey(currentInput: String, keyBytes: ByteArray) {
+        writeToShell(buildInputEditingBytes(currentInput, keyBytes))
+    }
+
+    fun sendPrimedInputCommand(command: String) {
+        writeToShell(buildInputEditingBytes(command, ENTER_KEY_BYTES))
+    }
+
+    fun currentInputPromptColumn(): Int {
+        return terminalScreenBuffer.currentLineText().length
+    }
+
+    fun currentInputAfterPromptColumn(promptColumn: Int): String {
+        return terminalScreenBuffer.currentLineTextAfterColumn(promptColumn)
+    }
+
     fun clearOutput() {
         mainHandler.post {
             terminalScreenBuffer.clear()
@@ -445,6 +461,10 @@ object TerminalSessionManager {
         return message ?: javaClass.simpleName
     }
 
+    private fun buildInputEditingBytes(currentInput: String, keyBytes: ByteArray): ByteArray {
+        return CONTROL_U_BYTES + currentInput.toByteArray(Charsets.UTF_8) + keyBytes
+    }
+
     private const val TERMINAL_COLUMNS = TerminalScreenBuffer.DEFAULT_COLUMNS
     private const val TERMINAL_ROWS = TerminalScreenBuffer.DEFAULT_ROWS
     private const val ENTER_KEY = "\r"
@@ -452,4 +472,5 @@ object TerminalSessionManager {
     private const val TERMINAL_RENDER_DELAY_MS = 50L
     private const val TERMINAL_KEEP_ALIVE_INTERVAL_MS = 10_000L
     private val ENTER_KEY_BYTES = ENTER_KEY.toByteArray(Charsets.UTF_8)
+    private val CONTROL_U_BYTES = byteArrayOf(0x15)
 }

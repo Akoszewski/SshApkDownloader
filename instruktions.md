@@ -72,8 +72,8 @@ Terminal behavior:
 - Place a second square icon button next to the send button with a copy icon; tapping it copies the current text from the command field at the bottom of the terminal.
 - Sending an empty command sends only Enter.
 - The terminal provides a compact, narrower `Exit` button that sends Ctrl-C to the remote shell to leave or interrupt an interactive Codex CLI session.
-- Next to the compact `Exit` button, provide a square sideways-arrow button for command autocomplete.
-- At the end of the bottom command bar, provide a square upward-arrow button that recalls the previous command into the command field, matching the behavior of pressing the Up arrow in a terminal shell.
+- Next to the compact `Exit` button, provide a square sideways-arrow button that sends Tab to the remote shell for command autocomplete and copies the completed line back into the command field.
+- At the end of the bottom command bar, provide a square upward-arrow button that sends Up to the remote shell and copies the recalled previous command back into the command field.
 - The terminal keeps the command input above the on-screen keyboard.
 - While connected, the terminal starts a foreground service and keeps wake/Wi-Fi locks active for the session.
 - The SSH session, shell channel, terminal screen buffer, keep-alive loop, and wake/Wi-Fi locks live outside `TerminalActivity`, so they survive activity recreation and navigation between app screens.

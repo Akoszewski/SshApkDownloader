@@ -62,4 +62,22 @@ class TerminalScreenBufferTest {
 
         assertEquals("bold normal", output)
     }
+
+    @Test
+    fun returnsCurrentLineText() {
+        val buffer = TerminalScreenBuffer()
+
+        buffer.append("first\r\nprompt> command")
+
+        assertEquals("prompt> command", buffer.currentLineText())
+    }
+
+    @Test
+    fun returnsCurrentLineTextAfterColumn() {
+        val buffer = TerminalScreenBuffer()
+
+        buffer.append("prompt> command")
+
+        assertEquals("command", buffer.currentLineTextAfterColumn("prompt> ".length))
+    }
 }
