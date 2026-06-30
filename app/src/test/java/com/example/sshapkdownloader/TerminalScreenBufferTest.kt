@@ -80,4 +80,13 @@ class TerminalScreenBufferTest {
 
         assertEquals("command", buffer.currentLineTextAfterColumn("prompt> ".length))
     }
+
+    @Test
+    fun rendersScrollbackRowsBeforeVisibleScreen() {
+        val buffer = TerminalScreenBuffer(columns = 20, rows = 3, scrollbackRows = 10)
+
+        val output = buffer.append("one\r\ntwo\r\nthree\r\nfour\r\nfive")
+
+        assertEquals("one\ntwo\nthree\nfour\nfive", output)
+    }
 }

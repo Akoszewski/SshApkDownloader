@@ -90,8 +90,11 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
     }
 
     override fun onTerminalOutputChanged(output: CharSequence) {
+        val wasAtBottom = isOutputScrolledToBottom()
         outputTextView.text = output
-        scrollOutputToBottom()
+        if (wasAtBottom) {
+            scrollOutputToBottom()
+        }
     }
 
     override fun onTerminalEnabledChanged(enabled: Boolean) {
@@ -246,6 +249,13 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         }
     }
 
+    private fun isOutputScrolledToBottom(): Boolean {
+        val outputContent = outputScrollView.getChildAt(0) ?: return true
+        val scrollRange = (outputContent.bottom + outputScrollView.paddingBottom - outputScrollView.height)
+            .coerceAtLeast(0)
+        return scrollRange - outputScrollView.scrollY <= OUTPUT_SCROLL_BOTTOM_TOLERANCE_PX
+    }
+
     private fun focusCommandInput() {
         commandEditText.requestFocus()
         val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -270,5 +280,6 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         val UP_ARROW_KEY_BYTES = "\u001B[A".toByteArray(Charsets.UTF_8)
         const val INPUT_EDIT_SYNC_DELAY_MS = 150L
         const val INPUT_EDIT_SYNC_MAX_ATTEMPTS = 6
+        const val OUTPUT_SCROLL_BOTTOM_TOLERANCE_PX = 24
     }
 }

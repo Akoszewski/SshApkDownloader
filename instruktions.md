@@ -67,6 +67,8 @@ Terminal behavior:
 - The app passes the terminal size to the SSH shell with `setPtySize(...)`.
 - Remote shell output is rendered through a `TerminalScreenBuffer` based on the Termux terminal emulator, so common cursor movement, clear-screen, line erase, colors, and bold text sequences are interpreted locally.
 - Terminal output is shown in a scrollable, selectable monospace view.
+- The terminal keeps a large scrollback history so older output remains available after it leaves the visible screen.
+- New terminal output should auto-scroll only while the user is already at the bottom; it must not force-scroll down while the user is reading older output.
 - Commands are entered through a single-line command field and sent with a square icon button showing a send arrow, or with the keyboard send action.
 - Do not use a text `Send` button in the terminal command bar.
 - Place a second square icon button next to the send button with a copy icon; tapping it copies the current text from the command field at the bottom of the terminal.

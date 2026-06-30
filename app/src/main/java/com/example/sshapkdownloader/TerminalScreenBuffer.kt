@@ -15,6 +15,7 @@ import com.termux.terminal.TextStyle
 class TerminalScreenBuffer(
     private val columns: Int = DEFAULT_COLUMNS,
     private val rows: Int = DEFAULT_ROWS,
+    private val scrollbackRows: Int = DEFAULT_SCROLLBACK_ROWS,
     private val writeToRemote: (ByteArray) -> Unit = {}
 ) {
     private val client = NoOpTerminalSessionClient()
@@ -29,7 +30,7 @@ class TerminalScreenBuffer(
         override fun onBell() = Unit
         override fun onColorsChanged() = Unit
     }
-    private val emulator = TerminalEmulator(output, columns, rows, null, client)
+    private val emulator = TerminalEmulator(output, columns, rows, scrollbackRows, client)
 
     fun append(text: String): String {
         val bytes = text.toByteArray(Charsets.UTF_8)
@@ -79,9 +80,9 @@ class TerminalScreenBuffer(
     private fun visibleRows(): List<Pair<Int, String>> {
         val screen = emulator.screen
         val rows = mutableListOf<Pair<Int, String>>()
-        for (row in 0 until emulator.mRows) {
+        for (row in -screen.activeTranscriptRows until emulator.mRows) {
             val text = rowText(row)
-            if (text.isNotEmpty() || row <= emulator.cursorRow) {
+            if (text.isNotEmpty() || row in 0..emulator.cursorRow) {
                 rows.add(row to text)
             }
         }
@@ -160,5 +161,6 @@ class TerminalScreenBuffer(
     companion object {
         const val DEFAULT_COLUMNS = 120
         const val DEFAULT_ROWS = 40
+        const val DEFAULT_SCROLLBACK_ROWS = 10_000
     }
 }
