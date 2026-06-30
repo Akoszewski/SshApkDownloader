@@ -4,10 +4,14 @@ import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.PowerManager
 import android.view.View
 import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.net.wifi.WifiManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ScrollView
@@ -15,8 +19,10 @@ import android.widget.TextView
 import android.widget.Toast
 import com.jcraft.jsch.ChannelShell
 import com.jcraft.jsch.Session
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.concurrent.atomic.AtomicBoolean
 
 class TerminalActivity : Activity() {
     private val preferences by lazy {
@@ -32,6 +38,13 @@ class TerminalActivity : Activity() {
         writeToShell(bytes)
     }
     private val writerLock = Any()
+    private val outputLock = Any()
+    private val pendingOutput = ByteArrayOutputStream()
+    private val outputRenderHandler = Handler(Looper.getMainLooper())
+    private val flushPendingOutputRunnable = Runnable {
+        flushPendingOutput()
+    }
+    private val disconnectStarted = AtomicBoolean(false)
 
     @Volatile
     private var session: Session? = null
@@ -45,6 +58,15 @@ class TerminalActivity : Activity() {
     @Volatile
     private var closedByUser = false
 
+    @Volatile
+    private var outputRenderScheduled = false
+
+    @Volatile
+    private var keepAliveThread: Thread? = null
+
+    private var terminalWakeLock: PowerManager.WakeLock? = null
+    private var terminalWifiLock: WifiManager.WifiLock? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_terminal)
@@ -56,8 +78,9 @@ class TerminalActivity : Activity() {
         keepCommandInputAboveKeyboard(findViewById(R.id.terminalRoot))
         disconnectButton.setOnClickListener {
             closedByUser = true
-            disconnectShell()
             appendOutput(getString(R.string.terminal_disconnected))
+            setTerminalEnabled(false)
+            disconnectShellAsync()
             finish()
         }
         commandEditText.setOnEditorActionListener { _, actionId, _ ->
@@ -120,7 +143,8 @@ class TerminalActivity : Activity() {
 
     override fun onDestroy() {
         closedByUser = true
-        disconnectShell()
+        outputRenderHandler.removeCallbacks(flushPendingOutputRunnable)
+        disconnectShellAsync()
         super.onDestroy()
     }
 
@@ -136,13 +160,19 @@ class TerminalActivity : Activity() {
 
         setTerminalEnabled(false)
         appendOutput(getString(R.string.terminal_connecting, address))
+        disconnectStarted.set(false)
         TerminalForegroundService.start(this)
+        acquireTerminalLocks()
 
         Thread {
             runCatching {
                 val sshSession = SshSessionFactory.create(SshTargetParser.parse(address), privateKey)
                 session = sshSession
                 sshSession.connect(15_000)
+                if (closedByUser) {
+                    disconnectShell()
+                    return@Thread
+                }
 
                 val shell = sshSession.openChannel("shell") as ChannelShell
                 shell.setPty(true)
@@ -155,6 +185,11 @@ class TerminalActivity : Activity() {
                 commandOutput = remoteOutput
 
                 shell.connect(15_000)
+                if (closedByUser) {
+                    disconnectShell()
+                    return@Thread
+                }
+                startKeepAliveLoop(sshSession)
                 runOnUiThread {
                     appendOutput(getString(R.string.terminal_connected))
                     setTerminalEnabled(true)
@@ -168,7 +203,7 @@ class TerminalActivity : Activity() {
                         setTerminalEnabled(false)
                     }
                 }
-                disconnectShell()
+                disconnectShellAsync()
             }
         }.start()
     }
@@ -181,9 +216,7 @@ class TerminalActivity : Activity() {
                 break
             }
             val bytes = buffer.copyOf(bytesRead)
-            runOnUiThread {
-                appendOutput(bytes)
-            }
+            appendOutput(bytes)
         }
 
         if (!closedByUser) {
@@ -191,7 +224,36 @@ class TerminalActivity : Activity() {
                 appendOutput(getString(R.string.terminal_remote_shell_closed))
                 setTerminalEnabled(false)
             }
-            disconnectShell()
+            disconnectShellAsync()
+        }
+    }
+
+    private fun startKeepAliveLoop(sshSession: Session) {
+        keepAliveThread = Thread {
+            while (!closedByUser && sshSession.isConnected) {
+                try {
+                    Thread.sleep(TERMINAL_KEEP_ALIVE_INTERVAL_MS)
+                    if (!closedByUser && sshSession.isConnected) {
+                        sshSession.sendKeepAliveMsg()
+                    }
+                } catch (error: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    return@Thread
+                } catch (error: Throwable) {
+                    if (!closedByUser) {
+                        runOnUiThread {
+                            appendOutput(getString(R.string.terminal_connection_error, error.displayMessage()))
+                            setTerminalEnabled(false)
+                        }
+                        disconnectShellAsync()
+                    }
+                    return@Thread
+                }
+            }
+        }.apply {
+            name = "ssh-terminal-keepalive"
+            isDaemon = true
+            start()
         }
     }
 
@@ -254,6 +316,14 @@ class TerminalActivity : Activity() {
     }
 
     private fun disconnectShell() {
+        if (!disconnectStarted.compareAndSet(false, true)) {
+            return
+        }
+        val currentThread = Thread.currentThread()
+        keepAliveThread
+            ?.takeIf { it != currentThread }
+            ?.interrupt()
+        keepAliveThread = null
         runCatching {
             commandOutput?.close()
         }
@@ -266,7 +336,57 @@ class TerminalActivity : Activity() {
             session?.disconnect()
         }
         session = null
+        releaseTerminalLocks()
         TerminalForegroundService.stop(this)
+    }
+
+    private fun disconnectShellAsync() {
+        Thread {
+            disconnectShell()
+        }.apply {
+            name = "ssh-terminal-disconnect"
+            isDaemon = true
+            start()
+        }
+    }
+
+    private fun acquireTerminalLocks() {
+        if (terminalWakeLock?.isHeld == true && terminalWifiLock?.isHeld == true) {
+            return
+        }
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        terminalWakeLock = powerManager.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "$packageName:TerminalSshSession"
+        ).apply {
+            setReferenceCounted(false)
+            acquire()
+        }
+
+        val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        terminalWifiLock = wifiManager.createWifiLock(
+            WifiManager.WIFI_MODE_FULL_HIGH_PERF,
+            "$packageName:TerminalSshWifi"
+        ).apply {
+            setReferenceCounted(false)
+            acquire()
+        }
+    }
+
+    private fun releaseTerminalLocks() {
+        terminalWakeLock?.let { wakeLock ->
+            if (wakeLock.isHeld) {
+                wakeLock.release()
+            }
+        }
+        terminalWakeLock = null
+
+        terminalWifiLock?.let { wifiLock ->
+            if (wifiLock.isHeld) {
+                wifiLock.release()
+            }
+        }
+        terminalWifiLock = null
     }
 
     private fun appendOutput(text: String) {
@@ -275,6 +395,26 @@ class TerminalActivity : Activity() {
     }
 
     private fun appendOutput(bytes: ByteArray) {
+        synchronized(outputLock) {
+            pendingOutput.write(bytes)
+            if (outputRenderScheduled) {
+                return
+            }
+            outputRenderScheduled = true
+        }
+        outputRenderHandler.postDelayed(flushPendingOutputRunnable, TERMINAL_RENDER_DELAY_MS)
+    }
+
+    private fun flushPendingOutput() {
+        val bytes = synchronized(outputLock) {
+            outputRenderScheduled = false
+            if (pendingOutput.size() == 0) {
+                return
+            }
+            pendingOutput.toByteArray().also {
+                pendingOutput.reset()
+            }
+        }
         terminalScreenBuffer.append(bytes, bytes.size)
         renderTerminalOutput()
     }
@@ -315,6 +455,8 @@ class TerminalActivity : Activity() {
         private const val TERMINAL_ROWS = TerminalScreenBuffer.DEFAULT_ROWS
         private const val ENTER_KEY = "\r"
         private const val ENTER_KEY_DELAY_MS = 60L
+        private const val TERMINAL_RENDER_DELAY_MS = 50L
+        private const val TERMINAL_KEEP_ALIVE_INTERVAL_MS = 10_000L
         private val ENTER_KEY_BYTES = ENTER_KEY.toByteArray(Charsets.UTF_8)
     }
 }

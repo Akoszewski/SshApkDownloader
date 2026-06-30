@@ -15,7 +15,9 @@ object SshSessionFactory {
 
         return jsch.getSession(target.username, target.host, target.port).apply {
             setConfig("StrictHostKeyChecking", "no")
-            timeout = 15_000
+            setConfig("TCPKeepAlive", "yes")
+            setServerAliveInterval(10_000)
+            setServerAliveCountMax(6)
         }
     }
 }

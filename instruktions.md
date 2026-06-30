@@ -58,9 +58,18 @@ Development process:
 8. Add SSH/SCP backend that lists APK files and displays buttons, then commit.
 9. Add APK downloading from the file buttons, then commit.
 
-Do rozważenia:
-  1. Termux terminal-view/emulator
-  2. Podpiąć SSH ChannelShell input/output do emulatora
-  3. Ustawić PTY: xterm-256color
-  4. Przekazywać rozmiar terminala przez setPtySize(...)
-  5. Obsłużyć klawiaturę specjalną: Ctrl, Esc, Tab, strzałki
+Terminal behavior:
+
+- The app includes a separate SSH terminal screen opened from the main screen.
+- The terminal uses an SSH `ChannelShell` connected to the generated private key and configured SSH target.
+- The shell is opened with PTY enabled, `xterm-256color` as the PTY type, and `TERM=xterm-256color`.
+- The app passes the terminal size to the SSH shell with `setPtySize(...)`.
+- Remote shell output is rendered through a `TerminalScreenBuffer` based on the Termux terminal emulator, so common cursor movement, clear-screen, line erase, colors, and bold text sequences are interpreted locally.
+- Terminal output is shown in a scrollable, selectable monospace view.
+- Commands are entered through a single-line command field and sent with the `Send` button or the keyboard send action.
+- Sending an empty command sends only Enter.
+- The terminal provides a `Ctrl+C` button that sends byte `0x03` to the remote shell.
+- The `Clear` button resets only the local terminal buffer and refreshes the displayed output; it does not send the remote `clear` command.
+- The terminal keeps the command input above the on-screen keyboard.
+- While connected, the terminal starts a foreground service and keeps wake/Wi-Fi locks active for the session.
+- The SSH session uses a keep-alive loop while the terminal remains connected.
