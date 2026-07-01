@@ -2,6 +2,7 @@ package com.example.sshapkdownloader
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -246,7 +247,25 @@ class MainActivity : Activity() {
             return
         }
 
-        startActivity(Intent(this, TerminalActivity::class.java))
+        AlertDialog.Builder(this)
+            .setTitle(R.string.title_terminal_session_choice)
+            .setItems(
+                arrayOf(
+                    getString(R.string.action_resume_terminal_session),
+                    getString(R.string.action_new_terminal_session)
+                )
+            ) { _, which ->
+                val launchMode = if (which == 0) {
+                    TerminalLaunchMode.ResumeServerSession
+                } else {
+                    TerminalLaunchMode.NewShell
+                }
+                startActivity(
+                    Intent(this, TerminalActivity::class.java)
+                        .putExtra(TerminalLaunchMode.EXTRA_NAME, launchMode.name)
+                )
+            }
+            .show()
     }
 
     private fun downloadRemoteApk(session: Session, apkName: String): Uri {

@@ -79,17 +79,28 @@ object TerminalSessionManager {
         }
     }
 
-    fun connect(context: Context, address: String, privateKey: String) {
+    fun connect(
+        context: Context,
+        address: String,
+        privateKey: String,
+        launchMode: TerminalLaunchMode = TerminalLaunchMode.ResumeServerSession
+    ) {
         val appContext = context.applicationContext
         applicationContext = appContext
 
         if (isSessionActive() || connecting) {
-            notifyOutputChanged()
-            notifyTerminalEnabled()
-            return
+            if (launchMode == TerminalLaunchMode.ResumeServerSession) {
+                notifyOutputChanged()
+                notifyTerminalEnabled()
+                return
+            }
+            stopRequested = true
+            setTerminalEnabled(false)
+            disconnectShell(stopForegroundService = false)
         }
 
         setTerminalEnabled(false)
+        terminalScreenBuffer.clear()
         appendOutput(appContext.getString(R.string.terminal_connecting, address))
         stopRequested = false
         connecting = true
@@ -125,6 +136,9 @@ object TerminalSessionManager {
                 connecting = false
                 startKeepAliveLoop(sshSession)
                 appendOutput(appContext.getString(R.string.terminal_connected))
+                if (launchMode == TerminalLaunchMode.ResumeServerSession) {
+                    startPersistentServerSession(remoteOutput)
+                }
                 setTerminalEnabled(true)
                 readShellOutput(remoteInput)
             }.onFailure { error ->
@@ -260,6 +274,13 @@ object TerminalSessionManager {
             name = "ssh-terminal-write-command"
             isDaemon = true
             start()
+        }
+    }
+
+    private fun startPersistentServerSession(output: OutputStream) {
+        synchronized(writerLock) {
+            output.write(PERSISTENT_SERVER_SESSION_COMMAND.toByteArray(Charsets.UTF_8))
+            output.flush()
         }
     }
 
@@ -471,6 +492,10 @@ object TerminalSessionManager {
     private const val ENTER_KEY_DELAY_MS = 60L
     private const val TERMINAL_RENDER_DELAY_MS = 50L
     private const val TERMINAL_KEEP_ALIVE_INTERVAL_MS = 10_000L
+    private const val PERSISTENT_SERVER_SESSION_COMMAND =
+        "if command -v tmux >/dev/null 2>&1; then exec tmux new-session -A -s ssh_apk_downloader; " +
+            "elif command -v screen >/dev/null 2>&1; then exec screen -xRR ssh_apk_downloader; " +
+            "else echo '[tmux or screen is required to resume terminal sessions]'; exec \"\$SHELL\" -l; fi\r"
     private val ENTER_KEY_BYTES = ENTER_KEY.toByteArray(Charsets.UTF_8)
     private val CONTROL_U_BYTES = byteArrayOf(0x15)
 }

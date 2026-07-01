@@ -177,7 +177,8 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         autocompleteButton.isEnabled = false
         previousCommandButton.isEnabled = false
         nextCommandButton.isEnabled = false
-        TerminalSessionManager.connect(this, address, privateKey)
+        val launchMode = TerminalLaunchMode.fromIntentValue(intent.getStringExtra(TerminalLaunchMode.EXTRA_NAME))
+        TerminalSessionManager.connect(this, address, privateKey, launchMode)
     }
 
     private fun sendCommand() {
