@@ -5,6 +5,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -14,25 +16,41 @@ class ConfigActivity : Activity() {
         getSharedPreferences("ssh_apk_downloader", Context.MODE_PRIVATE)
     }
 
+    private lateinit var ipAddressEditText: EditText
     private lateinit var publicKeyEditText: EditText
     private lateinit var generateButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_config)
+        ipAddressEditText = findViewById(R.id.ipAddressEditText)
         publicKeyEditText = findViewById(R.id.publicKeyEditText)
         generateButton = findViewById(R.id.generateButton)
+        ipAddressEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                saveAddress(s?.toString().orEmpty())
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
         generateButton.setOnClickListener {
             generateKey()
         }
         findViewById<Button>(R.id.copyButton).setOnClickListener {
             copyPublicKey()
         }
-        restorePublicKey()
+        restoreSavedValues()
     }
 
-    private fun restorePublicKey() {
+    private fun restoreSavedValues() {
+        ipAddressEditText.setText(preferences.getString("ip_address", ""))
         publicKeyEditText.setText(preferences.getString("public_ssh_key", ""))
+    }
+
+    private fun saveAddress(address: String) {
+        preferences.edit()
+            .putString("ip_address", address)
+            .apply()
     }
 
     private fun generateKey() {

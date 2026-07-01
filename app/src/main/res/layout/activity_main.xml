@@ -62,23 +62,10 @@
             android:orientation="vertical"
             android:paddingTop="42dp">
 
-            <EditText
-                android:id="@+id/ipAddressEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/primary"
-                android:hint="@string/hint_ssh_target"
-                android:imeOptions="actionNext"
-                android:inputType="textUri"
-                android:singleLine="true"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_muted" />
-
             <Button
                 android:id="@+id/connectButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
                 android:layout_marginBottom="22dp"
                 android:backgroundTint="@color/primary"
                 android:text="@string/action_connect"

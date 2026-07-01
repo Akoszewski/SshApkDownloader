@@ -18,7 +18,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -35,7 +34,6 @@ class MainActivity : Activity() {
         getSharedPreferences("ssh_apk_downloader", Context.MODE_PRIVATE)
     }
 
-    private lateinit var ipAddressEditText: EditText
     private lateinit var apkBinaryHashTextView: TextView
     private lateinit var apkListContainer: LinearLayout
 
@@ -44,7 +42,6 @@ class MainActivity : Activity() {
         createNotificationChannel()
         requestNotificationPermission()
         setContentView(R.layout.activity_main)
-        ipAddressEditText = findViewById(R.id.ipAddressEditText)
         apkBinaryHashTextView = findViewById(R.id.apkBinaryHashTextView)
         apkListContainer = findViewById(R.id.apkListContainer)
         findViewById<Button>(R.id.terminalButton).setOnClickListener {
@@ -56,28 +53,11 @@ class MainActivity : Activity() {
         findViewById<Button>(R.id.connectButton).setOnClickListener {
             connectAndLoadApks()
         }
-        restoreSavedValues()
         displayApkBinaryHash()
     }
 
-    override fun onPause() {
-        super.onPause()
-        saveValues()
-    }
-
-    private fun restoreSavedValues() {
-        ipAddressEditText.setText(preferences.getString("ip_address", ""))
-    }
-
-    private fun saveValues() {
-        preferences.edit()
-            .putString("ip_address", ipAddressEditText.text.toString())
-            .apply()
-    }
-
     private fun connectAndLoadApks() {
-        saveValues()
-        val address = ipAddressEditText.text.toString().trim()
+        val address = getStoredAddress()
         val privateKey = getStoredPrivateKey()
 
         if (address.isEmpty() || privateKey.isBlank()) {
@@ -207,8 +187,7 @@ class MainActivity : Activity() {
     }
 
     private fun downloadApk(apkName: String) {
-        saveValues()
-        val address = ipAddressEditText.text.toString().trim()
+        val address = getStoredAddress()
         val privateKey = getStoredPrivateKey()
 
         if (address.isEmpty() || privateKey.isBlank()) {
@@ -237,8 +216,7 @@ class MainActivity : Activity() {
     }
 
     private fun openTerminal() {
-        saveValues()
-        val address = ipAddressEditText.text.toString().trim()
+        val address = getStoredAddress()
         val privateKey = getStoredPrivateKey()
 
         if (address.isEmpty() || privateKey.isBlank()) {
@@ -376,6 +354,10 @@ class MainActivity : Activity() {
 
     private fun getStoredPrivateKey(): String {
         return preferences.getString("private_ssh_key", "") ?: ""
+    }
+
+    private fun getStoredAddress(): String {
+        return preferences.getString("ip_address", "")?.trim().orEmpty()
     }
 
     private fun showToastOnUiThread(message: String) {
