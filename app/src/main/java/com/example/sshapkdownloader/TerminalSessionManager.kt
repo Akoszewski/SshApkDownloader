@@ -60,6 +60,12 @@ object TerminalSessionManager {
     private var terminalEnabled = false
 
     @Volatile
+    private var terminalColumns = TerminalScreenBuffer.DEFAULT_COLUMNS
+
+    @Volatile
+    private var terminalRows = TerminalScreenBuffer.DEFAULT_ROWS
+
+    @Volatile
     private var connecting = false
 
     private var terminalWakeLock: PowerManager.WakeLock? = null
@@ -110,7 +116,7 @@ object TerminalSessionManager {
                 val shell = sshSession.openChannel("shell") as ChannelShell
                 shell.setPty(true)
                 shell.setPtyType("xterm-256color")
-                shell.setPtySize(TERMINAL_COLUMNS, TERMINAL_ROWS, 0, 0)
+                shell.setPtySize(terminalColumns, terminalRows, 0, 0)
                 shell.setEnv("TERM", "xterm-256color")
                 val remoteInput = shell.inputStream
                 val remoteOutput = shell.outputStream
@@ -189,6 +195,22 @@ object TerminalSessionManager {
             terminalScreenBuffer.clear()
             notifyOutputChanged()
         }
+    }
+
+    fun resizeTerminal(columns: Int, rows: Int) {
+        val boundedColumns = columns.coerceIn(MIN_TERMINAL_COLUMNS, MAX_TERMINAL_COLUMNS)
+        val boundedRows = rows.coerceIn(MIN_TERMINAL_ROWS, MAX_TERMINAL_ROWS)
+        if (boundedColumns == terminalColumns && boundedRows == terminalRows) {
+            return
+        }
+
+        terminalColumns = boundedColumns
+        terminalRows = boundedRows
+        mainHandler.post {
+            terminalScreenBuffer.resize(boundedColumns, boundedRows)
+            notifyOutputChanged()
+        }
+        channel?.takeIf { it.isConnected && !it.isClosed }?.setPtySize(boundedColumns, boundedRows, 0, 0)
     }
 
     private fun readShellOutput(remoteInput: InputStream) {
@@ -465,8 +487,10 @@ object TerminalSessionManager {
         return CONTROL_U_BYTES + currentInput.toByteArray(Charsets.UTF_8) + keyBytes
     }
 
-    private const val TERMINAL_COLUMNS = TerminalScreenBuffer.DEFAULT_COLUMNS
-    private const val TERMINAL_ROWS = TerminalScreenBuffer.DEFAULT_ROWS
+    private const val MIN_TERMINAL_COLUMNS = 20
+    private const val MAX_TERMINAL_COLUMNS = 200
+    private const val MIN_TERMINAL_ROWS = 8
+    private const val MAX_TERMINAL_ROWS = 80
     private const val ENTER_KEY = "\r"
     private const val ENTER_KEY_DELAY_MS = 60L
     private const val TERMINAL_RENDER_DELAY_MS = 50L

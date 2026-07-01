@@ -41,6 +41,7 @@
             android:fontFamily="monospace"
             android:includeFontPadding="false"
             android:lineSpacingExtra="2dp"
+            android:scrollHorizontally="true"
             android:textColor="@color/terminal_text"
             android:textIsSelectable="true"
             android:textSize="8sp" />

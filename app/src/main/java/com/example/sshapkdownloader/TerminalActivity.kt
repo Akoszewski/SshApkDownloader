@@ -51,6 +51,7 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         nextCommandButton = findViewById(R.id.nextCommandButton)
         exitButton = findViewById(R.id.exitButton)
         keepCommandInputAboveKeyboard(findViewById(R.id.terminalRoot))
+        keepRemoteTerminalSizeInSync()
         commandEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 sendCommand()
@@ -158,6 +159,32 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
             scrollOutputToBottom()
             insets
         }
+    }
+
+    private fun keepRemoteTerminalSizeInSync() {
+        outputScrollView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            syncRemoteTerminalSize()
+        }
+        outputTextView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            syncRemoteTerminalSize()
+        }
+        outputScrollView.post {
+            syncRemoteTerminalSize()
+        }
+    }
+
+    private fun syncRemoteTerminalSize() {
+        val availableWidth = outputScrollView.width - outputScrollView.paddingLeft - outputScrollView.paddingRight
+        val availableHeight = outputScrollView.height - outputScrollView.paddingTop - outputScrollView.paddingBottom
+        val characterWidth = outputTextView.paint.measureText("M").takeIf { it > 0f } ?: return
+        val lineHeight = outputTextView.lineHeight.takeIf { it > 0 } ?: return
+        if (availableWidth <= 0 || availableHeight <= 0) {
+            return
+        }
+
+        val columns = (availableWidth / characterWidth).toInt()
+        val rows = availableHeight / lineHeight
+        TerminalSessionManager.resizeTerminal(columns, rows)
     }
 
     private fun connectShell() {
