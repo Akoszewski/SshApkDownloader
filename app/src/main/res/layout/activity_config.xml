@@ -39,6 +39,28 @@
         android:textColor="@color/text_primary"
         android:textColorHint="@color/text_muted" />
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:text="@string/label_remote_apk_path"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/remoteApkPathEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="18dp"
+        android:backgroundTint="@color/primary"
+        android:hint="@string/hint_remote_apk_path"
+        android:imeOptions="actionNext"
+        android:inputType="textUri"
+        android:singleLine="true"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_muted" />
+
     <Button
         android:id="@+id/generateButton"
         android:layout_width="match_parent"

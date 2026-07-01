@@ -19,19 +19,22 @@ Initial UI:
 - The username is required and must be provided before `@`.
 - The port is optional and defaults to the standard SSH port, `22`.
 - Remember the SSH target between launches and save it while it is edited in the configuration activity.
+- In the configuration activity, show a single-line remote APK path field.
+- The remote APK path field should default to `~/Artifacts/android/`.
+- Remember the remote APK path between launches and save it while it is edited in the configuration activity.
 - The app should generate its own SSH key instead of asking the user to paste a private key.
 - In the configuration activity, add a `Generate key` button below the SSH target field.
 - Under `Generate key`, show a text field containing the generated public key for copying.
 - Next to the public key text field, show a `Copy` button that copies the public key to the clipboard.
 - Store the generated private key internally for SSH connections.
-- Show a `Connect` button on the main screen.
-- Keep clear vertical spacing between the `Connect` button and the APK download buttons.
+- Show a `Load files` button on the main screen.
+- Keep clear vertical spacing between the `Load files` button and the APK download buttons.
 - Use a polished visual style with consistent colors, readable text contrast, and comfortable spacing.
 
 Connection behavior:
 
-- After pressing `Connect`, connect to the server using the provided credentials.
-- Load APK files located on the server at `~/Artifacts/android/`.
+- After pressing `Load files`, connect to the server using the provided credentials.
+- Load APK files located on the server at the configured remote APK path.
 - Display one button per APK file.
 - Button labels should be the APK filenames.
 - The APK buttons should appear one below another in a scrollable view.
@@ -53,7 +56,7 @@ Development process:
 4. Create an appropriate Android `.gitignore`.
 5. Add files not ignored by `.gitignore`.
 6. Commit with message: `Initial commit - blank app`.
-7. Add frontend fields and the `Connect` button only, then commit.
+7. Add frontend fields and the `Load files` button only, then commit.
 8. Add SSH/SCP backend that lists APK files and displays buttons, then commit.
 9. Add APK downloading from the file buttons, then commit.
 

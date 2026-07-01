@@ -59,9 +59,10 @@ class MainActivity : Activity() {
     private fun connectAndLoadApks() {
         val address = getStoredAddress()
         val privateKey = getStoredPrivateKey()
+        val remoteApkPath = getStoredRemoteApkPath()
 
-        if (address.isEmpty() || privateKey.isBlank()) {
-            showToast(getString(R.string.message_ssh_target_and_key_required))
+        if (address.isEmpty() || privateKey.isBlank() || remoteApkPath.isBlank()) {
+            showToast(getString(R.string.message_ssh_target_key_and_path_required))
             return
         }
 
@@ -73,7 +74,7 @@ class MainActivity : Activity() {
                 val session = SshSessionFactory.create(SshTargetParser.parse(address), privateKey)
                 try {
                     session.connect(15_000)
-                    listRemoteApks(session)
+                    listRemoteApks(session, remoteApkPath)
                 } finally {
                     session.disconnect()
                 }
@@ -90,8 +91,8 @@ class MainActivity : Activity() {
         }.start()
     }
 
-    private fun listRemoteApks(session: Session): List<String> {
-        val command = "find ~/Artifacts/android -maxdepth 1 -type f -name '*.apk' -printf '%f\\n' | sort"
+    private fun listRemoteApks(session: Session, remoteApkPath: String): List<String> {
+        val command = "find ${remoteApkPath.toShellPathExpression()} -maxdepth 1 -type f -name '*.apk' -printf '%f\\n' | sort"
         val output = executeRemoteCommand(session, command)
         return output.lineSequence()
             .map { it.trim() }
@@ -189,9 +190,10 @@ class MainActivity : Activity() {
     private fun downloadApk(apkName: String) {
         val address = getStoredAddress()
         val privateKey = getStoredPrivateKey()
+        val remoteApkPath = getStoredRemoteApkPath()
 
-        if (address.isEmpty() || privateKey.isBlank()) {
-            showToast(getString(R.string.message_ssh_target_and_key_required))
+        if (address.isEmpty() || privateKey.isBlank() || remoteApkPath.isBlank()) {
+            showToast(getString(R.string.message_ssh_target_key_and_path_required))
             return
         }
 
@@ -202,7 +204,7 @@ class MainActivity : Activity() {
                 val session = SshSessionFactory.create(SshTargetParser.parse(address), privateKey)
                 try {
                     session.connect(15_000)
-                    downloadRemoteApk(session, apkName)
+                    downloadRemoteApk(session, remoteApkPath, apkName)
                 } finally {
                     session.disconnect()
                 }
@@ -227,13 +229,13 @@ class MainActivity : Activity() {
         startActivity(Intent(this, TerminalActivity::class.java))
     }
 
-    private fun downloadRemoteApk(session: Session, apkName: String): Uri {
+    private fun downloadRemoteApk(session: Session, remoteApkPath: String, apkName: String): Uri {
         ApkNameValidator.requireValid(apkName)
 
         val channel = session.openChannel("sftp") as ChannelSftp
         channel.connect(15_000)
         try {
-            channel.cd("Artifacts/android")
+            channel.cd(remoteApkPath.toSftpDirectory())
             val destination = openDownloadDestination(apkName)
             destination.outputStream.use { output ->
                 channel.get(apkName, output)
@@ -360,6 +362,36 @@ class MainActivity : Activity() {
         return preferences.getString("ip_address", "")?.trim().orEmpty()
     }
 
+    private fun getStoredRemoteApkPath(): String {
+        return preferences.getString("remote_apk_path", DEFAULT_REMOTE_APK_PATH)?.trim().orEmpty()
+    }
+
+    private fun String.shellQuote(): String {
+        return "'${replace("'", "'\"'\"'")}'"
+    }
+
+    private fun String.toShellPathExpression(): String {
+        val path = trim().trimTrailingSlashes()
+        return when {
+            path == "~" -> "\$HOME"
+            path.startsWith("~/") -> "\$HOME/${path.removePrefix("~/").shellQuote()}"
+            else -> path.shellQuote()
+        }
+    }
+
+    private fun String.toSftpDirectory(): String {
+        val path = trim().trimTrailingSlashes()
+        return when {
+            path == "~" -> "."
+            path.startsWith("~/") -> path.removePrefix("~/")
+            else -> path
+        }
+    }
+
+    private fun String.trimTrailingSlashes(): String {
+        return if (length > 1) trimEnd('/').ifEmpty { "/" } else this
+    }
+
     private fun showToastOnUiThread(message: String) {
         runOnUiThread {
             showToast(message)
@@ -379,5 +411,6 @@ class MainActivity : Activity() {
     companion object {
         private const val DOWNLOAD_CHANNEL_ID = "apk_downloads"
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 100
+        private const val DEFAULT_REMOTE_APK_PATH = "~/Artifacts/android/"
     }
 }
