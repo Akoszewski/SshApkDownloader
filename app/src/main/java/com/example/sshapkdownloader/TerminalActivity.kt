@@ -37,6 +37,11 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
     private var remoteInputPrimed = false
     private var remoteInputPromptColumn: Int? = null
     private var inputSyncGeneration = 0
+    private var pendingTerminalColumns = 0
+    private var pendingTerminalRows = 0
+    private val syncRemoteTerminalSizeRunnable = Runnable {
+        syncRemoteTerminalSize()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -163,14 +168,16 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
 
     private fun keepRemoteTerminalSizeInSync() {
         outputScrollView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            syncRemoteTerminalSize()
-        }
-        outputTextView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            syncRemoteTerminalSize()
+            scheduleRemoteTerminalSizeSync()
         }
         outputScrollView.post {
             syncRemoteTerminalSize()
         }
+    }
+
+    private fun scheduleRemoteTerminalSizeSync() {
+        mainHandler.removeCallbacks(syncRemoteTerminalSizeRunnable)
+        mainHandler.postDelayed(syncRemoteTerminalSizeRunnable, TERMINAL_SIZE_SYNC_DELAY_MS)
     }
 
     private fun syncRemoteTerminalSize() {
@@ -184,6 +191,12 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
 
         val columns = (availableWidth / characterWidth).toInt()
         val rows = availableHeight / lineHeight
+        if (columns == pendingTerminalColumns && rows == pendingTerminalRows) {
+            return
+        }
+
+        pendingTerminalColumns = columns
+        pendingTerminalRows = rows
         TerminalSessionManager.resizeTerminal(columns, rows)
     }
 
@@ -310,6 +323,7 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         val DOWN_ARROW_KEY_BYTES = "\u001B[B".toByteArray(Charsets.UTF_8)
         const val INPUT_EDIT_SYNC_DELAY_MS = 150L
         const val INPUT_EDIT_SYNC_MAX_ATTEMPTS = 6
+        const val TERMINAL_SIZE_SYNC_DELAY_MS = 120L
         const val OUTPUT_SCROLL_BOTTOM_TOLERANCE_PX = 24
     }
 }

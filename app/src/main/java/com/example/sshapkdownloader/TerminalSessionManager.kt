@@ -210,7 +210,24 @@ object TerminalSessionManager {
             terminalScreenBuffer.resize(boundedColumns, boundedRows)
             notifyOutputChanged()
         }
-        channel?.takeIf { it.isConnected && !it.isClosed }?.setPtySize(boundedColumns, boundedRows, 0, 0)
+        resizeRemotePty(boundedColumns, boundedRows)
+    }
+
+    private fun resizeRemotePty(columns: Int, rows: Int) {
+        val shell = channel?.takeIf { it.isConnected && !it.isClosed } ?: return
+        Thread {
+            runCatching {
+                synchronized(writerLock) {
+                    if (shell.isConnected && !shell.isClosed) {
+                        shell.setPtySize(columns, rows, 0, 0)
+                    }
+                }
+            }
+        }.apply {
+            name = "ssh-terminal-resize"
+            isDaemon = true
+            start()
+        }
     }
 
     private fun readShellOutput(remoteInput: InputStream) {
