@@ -18,8 +18,11 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.Gravity
 import android.webkit.MimeTypeMap
 import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -153,21 +156,28 @@ class MainActivity : Activity() {
         apkNames.forEach { apkName ->
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.file_list_item_background)
+                setPadding(dp(8), dp(8), dp(8), dp(8))
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    bottomMargin = dp(10)
+                    bottomMargin = dp(12)
                 }
             }
 
             row.addView(Button(this).apply {
                 text = apkName
+                setAllCaps(false)
                 setTextColor(Color.WHITE)
+                textSize = 14f
                 backgroundTintList = ColorStateList.valueOf(getColor(R.color.accent))
+                minHeight = dp(48)
+                setPadding(dp(14), 0, dp(14), 0)
                 layoutParams = LinearLayout.LayoutParams(
                     0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    dp(48),
                     1f
                 )
                 setOnClickListener {
@@ -175,13 +185,15 @@ class MainActivity : Activity() {
                 }
             })
 
-            row.addView(Button(this).apply {
-                text = getString(R.string.action_delete)
-                setTextColor(Color.WHITE)
+            row.addView(ImageButton(this).apply {
+                setImageResource(R.drawable.ic_delete_24)
                 backgroundTintList = ColorStateList.valueOf(getColor(R.color.danger))
+                contentDescription = getString(R.string.action_delete)
+                scaleType = ImageView.ScaleType.CENTER
+                setPadding(dp(12), dp(12), dp(12), dp(12))
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
+                    dp(48),
+                    dp(48)
                 ).apply {
                     leftMargin = dp(8)
                 }

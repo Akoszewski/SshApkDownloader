@@ -43,8 +43,8 @@ Connection behavior:
 - Display one button per file.
 - Button labels should be the filenames.
 - The file buttons should appear one below another in a scrollable view.
-- Show a red `Delete` button next to every file button.
-- Pressing `Delete` should show a confirmation dialog before removing the file from the shared folder.
+- Show a red trash icon button next to every file button.
+- Pressing the trash icon should show a confirmation dialog before removing the file from the shared folder.
 - Use Toast messages for SSH errors.
 
 Download behavior:
