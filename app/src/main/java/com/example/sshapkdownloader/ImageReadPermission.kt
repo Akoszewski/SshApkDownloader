@@ -13,10 +13,13 @@ fun Context.canReadImages(): Boolean {
     }
 }
 
-fun imageReadPermission(): String {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        Manifest.permission.READ_MEDIA_IMAGES
-    } else {
-        Manifest.permission.READ_EXTERNAL_STORAGE
+fun imageReadPermissions(): Array<String> {
+    return when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> arrayOf(
+            Manifest.permission.READ_MEDIA_IMAGES,
+            Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+        )
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+        else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
     }
 }

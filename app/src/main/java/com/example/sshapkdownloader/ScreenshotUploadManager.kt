@@ -21,10 +21,15 @@ object ScreenshotUploadManager {
     private const val KEY_LAST_UPLOADED_SCREENSHOT_ID = "last_uploaded_screenshot_id"
     private const val DEFAULT_REMOTE_APK_PATH = "~/Artifacts/android/"
     private const val RECENT_SCREENSHOT_GRACE_SECONDS = 5L
+    private const val SCREENSHOT_SCAN_DELAY_MILLIS = 1_500L
+    private const val SCREENSHOT_SCAN_RETRY_DELAY_MILLIS = 2_000L
+    private const val SCREENSHOT_SCAN_ATTEMPTS = 4
 
     private var observer: ContentObserver? = null
     private var startedAtSeconds = 0L
+    private val mainHandler = Handler(Looper.getMainLooper())
     private val uploadInProgress = AtomicBoolean(false)
+    private var pendingUpload: Runnable? = null
 
     fun start(context: Context) {
         val appContext = context.applicationContext
@@ -39,8 +44,12 @@ object ScreenshotUploadManager {
 
         startedAtSeconds = System.currentTimeMillis() / 1000L
         observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                scheduleNewestScreenshotUpload(appContext)
+            }
+
             override fun onChange(selfChange: Boolean, uri: Uri?) {
-                uploadNewestScreenshot(appContext)
+                scheduleNewestScreenshotUpload(appContext)
             }
         }
         appContext.contentResolver.registerContentObserver(
@@ -55,17 +64,50 @@ object ScreenshotUploadManager {
             context.applicationContext.contentResolver.unregisterContentObserver(it)
         }
         observer = null
+        pendingUpload?.let { mainHandler.removeCallbacks(it) }
+        pendingUpload = null
     }
 
-    private fun uploadNewestScreenshot(context: Context) {
+    private fun scheduleNewestScreenshotUpload(context: Context, attemptsRemaining: Int = SCREENSHOT_SCAN_ATTEMPTS) {
+        pendingUpload?.let { mainHandler.removeCallbacks(it) }
+        val appContext = context.applicationContext
+        val task = Runnable {
+            pendingUpload = null
+            uploadNewestScreenshot(appContext, attemptsRemaining)
+        }
+        pendingUpload = task
+        mainHandler.postDelayed(task, SCREENSHOT_SCAN_DELAY_MILLIS)
+    }
+
+    private fun scheduleRetry(context: Context, attemptsRemaining: Int) {
+        val appContext = context.applicationContext
+        mainHandler.post {
+            if (attemptsRemaining <= 1 || observer == null) {
+                return@post
+            }
+            pendingUpload?.let { mainHandler.removeCallbacks(it) }
+            val task = Runnable {
+                pendingUpload = null
+                uploadNewestScreenshot(appContext, attemptsRemaining - 1)
+            }
+            pendingUpload = task
+            mainHandler.postDelayed(task, SCREENSHOT_SCAN_RETRY_DELAY_MILLIS)
+        }
+    }
+
+    private fun uploadNewestScreenshot(context: Context, attemptsRemaining: Int) {
         if (!uploadInProgress.compareAndSet(false, true)) {
+            scheduleRetry(context, attemptsRemaining)
             return
         }
 
         Thread {
             try {
                 runCatching {
-                    val screenshot = findNewestScreenshot(context) ?: return@Thread
+                    val screenshot = findNewestScreenshot(context) ?: run {
+                        scheduleRetry(context, attemptsRemaining)
+                        return@Thread
+                    }
                     uploadScreenshot(context, screenshot)
                     rememberUploadedScreenshot(context, screenshot.id)
                 }.onSuccess {

@@ -94,7 +94,7 @@ class ConfigActivity : Activity() {
 
     private fun saveScreenshotUploadEnabled(enabled: Boolean) {
         if (enabled && !canReadImages()) {
-            requestPermissions(arrayOf(imageReadPermission()), IMAGE_READ_PERMISSION_REQUEST_CODE)
+            requestPermissions(imageReadPermissions(), IMAGE_READ_PERMISSION_REQUEST_CODE)
         }
         preferences.edit()
             .putBoolean("upload_screenshots_to_shared_folder", enabled)
@@ -125,7 +125,7 @@ class ConfigActivity : Activity() {
             ScreenshotUploadManager.start(this)
         } else {
             ScreenshotUploadManager.stop(this)
-            Toast.makeText(this, getString(R.string.message_image_permission_required), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.message_full_image_permission_required), Toast.LENGTH_SHORT).show()
         }
     }
 

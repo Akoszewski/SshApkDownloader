@@ -26,7 +26,7 @@ Initial UI:
 - If the terminal start folder is blank, the SSH terminal should open in the server default home directory.
 - If the terminal start folder has a value, the SSH terminal should change to that directory immediately after connecting.
 - In the configuration activity, show an `Upload screenshots to shared folder` checkbox.
-- When this checkbox is enabled, request image read permission if needed and automatically upload newly created screenshot files to the configured shared folder over SFTP.
+- When this checkbox is enabled, request full image read permission if needed and automatically upload newly created screenshot files to the configured shared folder over SFTP. Partial photo access on Android 14 or newer is not enough for automatic upload of future screenshots.
 - The app should generate its own SSH key instead of asking the user to paste a private key.
 - In the configuration activity, add a `Generate key` button below the SSH target field.
 - Under `Generate key`, show a text field containing the generated public key for copying.
