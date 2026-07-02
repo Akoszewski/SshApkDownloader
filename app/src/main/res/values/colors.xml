@@ -1,18 +1,21 @@
 <resources>
-    <color name="screen_background">#F5F7FB</color>
-    <color name="terminal_background">#111827</color>
-    <color name="terminal_output_background">#05070A</color>
+    <color name="screen_background">#F3F6F8</color>
+    <color name="terminal_background">#101923</color>
+    <color name="terminal_output_background">#071015</color>
     <color name="surface">#FFFFFF</color>
-    <color name="terminal_surface">#E5E7EB</color>
-    <color name="primary">#2563EB</color>
-    <color name="accent">#0F766E</color>
-    <color name="terminal_button">#1F2937</color>
-    <color name="secondary">#475569</color>
-    <color name="danger">#B91C1C</color>
-    <color name="text_primary">#172033</color>
-    <color name="text_muted">#667085</color>
-    <color name="terminal_text_primary">#F9FAFB</color>
-    <color name="terminal_text_muted">#9CA3AF</color>
-    <color name="terminal_text">#B7F7C8</color>
+    <color name="surface_stroke">#DDE6EE</color>
+    <color name="terminal_surface">#E7EDF2</color>
+    <color name="primary">#176B70</color>
+    <color name="primary_pressed">#12575B</color>
+    <color name="accent">#215C8F</color>
+    <color name="terminal_button">#132238</color>
+    <color name="secondary">#52616F</color>
+    <color name="danger">#B83232</color>
+    <color name="danger_pressed">#982929</color>
+    <color name="text_primary">#12202F</color>
+    <color name="text_muted">#667381</color>
+    <color name="terminal_text_primary">#F4F8FA</color>
+    <color name="terminal_text_muted">#8EA0AE</color>
+    <color name="terminal_text">#BDECCB</color>
     <color name="white">#FFFFFF</color>
 </resources>

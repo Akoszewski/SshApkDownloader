@@ -1,10 +1,12 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/screen_background"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:background="@color/screen_background"
         android:orientation="vertical"
         android:paddingStart="24dp"
@@ -30,10 +32,10 @@
             <Button
                 android:id="@+id/terminalButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:backgroundTint="@color/terminal_button"
+                android:background="@drawable/button_dark"
                 android:text="@string/action_terminal"
                 android:textColor="@color/white"
                 android:textSize="12sp" />
@@ -41,9 +43,9 @@
             <Button
                 android:id="@+id/configurationButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
                 android:layout_weight="1"
-                android:backgroundTint="@color/surface"
+                android:background="@drawable/button_secondary"
                 android:text="@string/action_configuration"
                 android:textColor="@color/primary"
                 android:textSize="12sp" />
@@ -67,9 +69,9 @@
             <Button
                 android:id="@+id/connectButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
                 android:layout_marginBottom="22dp"
-                android:backgroundTint="@color/primary"
+                android:background="@drawable/button_primary"
                 android:text="@string/action_connect"
                 android:textColor="@color/white" />
 

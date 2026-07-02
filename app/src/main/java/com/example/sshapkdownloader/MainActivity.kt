@@ -7,7 +7,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.res.ColorStateList
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -173,7 +172,7 @@ class MainActivity : Activity() {
                 setTextColor(Color.WHITE)
                 textSize = 11f
                 maxLines = 2
-                backgroundTintList = ColorStateList.valueOf(getColor(R.color.accent))
+                setBackgroundResource(R.drawable.button_primary)
                 minHeight = dp(48)
                 setPadding(dp(14), 0, dp(14), 0)
                 layoutParams = LinearLayout.LayoutParams(
@@ -188,7 +187,7 @@ class MainActivity : Activity() {
 
             row.addView(ImageButton(this).apply {
                 setImageResource(R.drawable.ic_delete_24)
-                backgroundTintList = ColorStateList.valueOf(getColor(R.color.danger))
+                setBackgroundResource(R.drawable.button_danger)
                 contentDescription = getString(R.string.action_delete)
                 scaleType = ImageView.ScaleType.CENTER
                 setPadding(dp(12), dp(12), dp(12), dp(12))
