@@ -8,17 +8,27 @@ import android.net.Uri
 import android.os.Environment
 import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
+import android.webkit.MimeTypeMap
 import java.io.File
 
 class DownloadedApkProvider : ContentProvider() {
     override fun onCreate(): Boolean = true
 
-    override fun getType(uri: Uri): String = APK_MIME_TYPE
+    override fun getType(uri: Uri): String {
+        val fileName = uri.lastPathSegment.orEmpty()
+        if (fileName.endsWith(".apk", ignoreCase = true)) {
+            return APK_MIME_TYPE
+        }
+
+        val extension = fileName.substringAfterLast('.', missingDelimiterValue = "")
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.lowercase())
+            ?: DEFAULT_FILE_MIME_TYPE
+    }
 
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor {
         require(mode == "r") { "Only read access is supported" }
-        val apkName = uri.lastPathSegment ?: error("Missing APK filename")
-        ApkNameValidator.requireValid(apkName)
+        val apkName = uri.lastPathSegment ?: error("Missing filename")
+        RemoteFileNameValidator.requireValid(apkName)
 
         val file = File(downloadsDirectory(), apkName)
         return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
@@ -31,8 +41,8 @@ class DownloadedApkProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
         sortOrder: String?
     ): Cursor {
-        val apkName = uri.lastPathSegment ?: error("Missing APK filename")
-        ApkNameValidator.requireValid(apkName)
+        val apkName = uri.lastPathSegment ?: error("Missing filename")
+        RemoteFileNameValidator.requireValid(apkName)
         val file = File(downloadsDirectory(), apkName)
 
         val columns = projection ?: arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
@@ -67,5 +77,6 @@ class DownloadedApkProvider : ContentProvider() {
 
     companion object {
         const val APK_MIME_TYPE = "application/vnd.android.package-archive"
+        private const val DEFAULT_FILE_MIME_TYPE = "application/octet-stream"
     }
 }

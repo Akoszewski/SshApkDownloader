@@ -22,6 +22,9 @@ Initial UI:
 - In the configuration activity, show a single-line shared folder field.
 - The shared folder field should default to `~/Artifacts/android/`.
 - Remember the shared folder between launches and save it while it is edited in the configuration activity.
+- In the configuration activity, show a single-line terminal start folder field.
+- If the terminal start folder is blank, the SSH terminal should open in the server default home directory.
+- If the terminal start folder has a value, the SSH terminal should change to that directory immediately after connecting.
 - In the configuration activity, show an `Upload screenshots to shared folder` checkbox.
 - When this checkbox is enabled, request image read permission if needed and automatically upload newly created screenshot files to the configured shared folder over SFTP.
 - The app should generate its own SSH key instead of asking the user to paste a private key.
@@ -36,18 +39,18 @@ Initial UI:
 Connection behavior:
 
 - After pressing `Load files`, connect to the server using the provided credentials.
-- Load APK files located on the server at the configured remote APK path.
-- Display one button per APK file.
-- Button labels should be the APK filenames.
-- The APK buttons should appear one below another in a scrollable view.
+- Load all regular files located on the server at the configured remote shared folder path.
+- Display one button per file.
+- Button labels should be the filenames.
+- The file buttons should appear one below another in a scrollable view.
 - Use Toast messages for SSH errors.
 
 Download behavior:
 
-- Pressing an APK button downloads that APK file.
+- Pressing a file button downloads that file.
 - Show a Toast when the download starts.
 - Show a Toast when the download completes or fails.
-- Show a notification when the download completes. Tapping the notification should open the downloaded APK for installation.
+- Show a notification when the download completes. Tapping the notification should open the downloaded file with an appropriate app.
 - Download files to a location that is easy to find in the phone file manager, so the user can install them manually.
 
 Development process:

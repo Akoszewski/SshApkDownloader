@@ -15,6 +15,7 @@
 
     <string name="hint_ssh_target">user@host:port</string>
     <string name="hint_remote_apk_path">~/Artifacts/android/</string>
+    <string name="hint_terminal_start_path">leave empty for home</string>
     <string name="hint_ssh_public_key">SSH public key</string>
     <string name="hint_terminal_command">command</string>
 
@@ -22,17 +23,18 @@
     <string name="title_ssh_terminal">SSH Terminal</string>
     <string name="label_server_address">SSH server:</string>
     <string name="label_remote_apk_path">Shared folder:</string>
+    <string name="label_terminal_start_path">Terminal start folder:</string>
     <string name="label_upload_screenshots">Upload screenshots to shared folder</string>
 
-    <string name="apk_binary_hash_loading">APK SHA-256: ...</string>
-    <string name="apk_binary_hash">APK SHA-256: %1$s</string>
-    <string name="apk_binary_hash_error">APK SHA-256 unavailable: %1$s</string>
+    <string name="apk_binary_hash_loading">App APK SHA-256: ...</string>
+    <string name="apk_binary_hash">App APK SHA-256: %1$s</string>
+    <string name="apk_binary_hash_error">App APK SHA-256 unavailable: %1$s</string>
 
     <string name="message_ssh_target_and_key_required">SSH target and generated key are required</string>
     <string name="message_ssh_target_key_and_path_required">SSH target, generated key, and shared folder are required</string>
     <string name="message_connecting">Connecting</string>
     <string name="message_ssh_error">SSH error: %1$s</string>
-    <string name="message_no_apk_files_found">No APK files found in shared folder</string>
+    <string name="message_no_files_found">No files found in shared folder</string>
     <string name="message_download_started">Download started: %1$s</string>
     <string name="message_download_completed">Download completed: %1$s</string>
     <string name="message_download_error">Download error: %1$s</string>
@@ -57,8 +59,8 @@
 
     <string name="clipboard_ssh_public_key">SSH public key</string>
     <string name="clipboard_terminal_command">Terminal command</string>
-    <string name="notification_apk_downloaded">APK downloaded</string>
-    <string name="notification_channel_apk_downloads">APK downloads</string>
+    <string name="notification_file_downloaded">File downloaded</string>
+    <string name="notification_channel_apk_downloads">File downloads</string>
     <string name="notification_channel_terminal">SSH terminal</string>
     <string name="notification_terminal_active">SSH terminal active</string>
     <string name="notification_terminal_active_detail">Keeping the terminal session connected</string>
