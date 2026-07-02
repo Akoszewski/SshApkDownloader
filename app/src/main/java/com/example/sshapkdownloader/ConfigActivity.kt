@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Toast
 
@@ -18,6 +19,7 @@ class ConfigActivity : Activity() {
 
     private lateinit var ipAddressEditText: EditText
     private lateinit var remoteApkPathEditText: EditText
+    private lateinit var uploadScreenshotsCheckBox: CheckBox
     private lateinit var publicKeyEditText: EditText
     private lateinit var generateButton: Button
 
@@ -26,6 +28,7 @@ class ConfigActivity : Activity() {
         setContentView(R.layout.activity_config)
         ipAddressEditText = findViewById(R.id.ipAddressEditText)
         remoteApkPathEditText = findViewById(R.id.remoteApkPathEditText)
+        uploadScreenshotsCheckBox = findViewById(R.id.uploadScreenshotsCheckBox)
         publicKeyEditText = findViewById(R.id.publicKeyEditText)
         generateButton = findViewById(R.id.generateButton)
         ipAddressEditText.addTextChangedListener(object : TextWatcher {
@@ -45,6 +48,9 @@ class ConfigActivity : Activity() {
         generateButton.setOnClickListener {
             generateKey()
         }
+        uploadScreenshotsCheckBox.setOnCheckedChangeListener { _, isChecked ->
+            saveScreenshotUploadEnabled(isChecked)
+        }
         findViewById<Button>(R.id.copyButton).setOnClickListener {
             copyPublicKey()
         }
@@ -54,6 +60,7 @@ class ConfigActivity : Activity() {
     private fun restoreSavedValues() {
         ipAddressEditText.setText(preferences.getString("ip_address", ""))
         remoteApkPathEditText.setText(preferences.getString("remote_apk_path", DEFAULT_REMOTE_APK_PATH))
+        uploadScreenshotsCheckBox.isChecked = preferences.getBoolean("upload_screenshots_to_shared_folder", false)
         publicKeyEditText.setText(preferences.getString("public_ssh_key", ""))
     }
 
@@ -66,6 +73,12 @@ class ConfigActivity : Activity() {
     private fun saveRemoteApkPath(remoteApkPath: String) {
         preferences.edit()
             .putString("remote_apk_path", remoteApkPath)
+            .apply()
+    }
+
+    private fun saveScreenshotUploadEnabled(enabled: Boolean) {
+        preferences.edit()
+            .putBoolean("upload_screenshots_to_shared_folder", enabled)
             .apply()
     }
 

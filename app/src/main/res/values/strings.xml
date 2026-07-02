@@ -7,7 +7,7 @@
     <string name="action_generate_key">Generate key</string>
     <string name="action_copy">Copy</string>
     <string name="action_send">Send</string>
-    <string name="action_exit">Exit</string>
+    <string name="action_exit">Cancel</string>
     <string name="action_copy_command">Copy command</string>
     <string name="action_autocomplete">Autocomplete command</string>
     <string name="action_previous_command">Previous command</string>
@@ -20,18 +20,19 @@
 
     <string name="title_configuration">Configuration</string>
     <string name="title_ssh_terminal">SSH Terminal</string>
-    <string name="label_server_address">adres serwer adres:</string>
-    <string name="label_remote_apk_path">Remote APK path:</string>
+    <string name="label_server_address">SSH server:</string>
+    <string name="label_remote_apk_path">Shared folder:</string>
+    <string name="label_upload_screenshots">Upload screenshots to shared folder</string>
 
     <string name="apk_binary_hash_loading">APK SHA-256: ...</string>
     <string name="apk_binary_hash">APK SHA-256: %1$s</string>
     <string name="apk_binary_hash_error">APK SHA-256 unavailable: %1$s</string>
 
     <string name="message_ssh_target_and_key_required">SSH target and generated key are required</string>
-    <string name="message_ssh_target_key_and_path_required">SSH target, generated key, and remote APK path are required</string>
+    <string name="message_ssh_target_key_and_path_required">SSH target, generated key, and shared folder are required</string>
     <string name="message_connecting">Connecting</string>
     <string name="message_ssh_error">SSH error: %1$s</string>
-    <string name="message_no_apk_files_found">No APK files found</string>
+    <string name="message_no_apk_files_found">No APK files found in shared folder</string>
     <string name="message_download_started">Download started: %1$s</string>
     <string name="message_download_completed">Download completed: %1$s</string>
     <string name="message_download_error">Download error: %1$s</string>
