@@ -171,7 +171,8 @@ class MainActivity : Activity() {
                 text = apkName
                 setAllCaps(false)
                 setTextColor(Color.WHITE)
-                textSize = 14f
+                textSize = 11f
+                maxLines = 2
                 backgroundTintList = ColorStateList.valueOf(getColor(R.color.accent))
                 minHeight = dp(48)
                 setPadding(dp(14), 0, dp(14), 0)
