@@ -14,14 +14,16 @@ Initial UI:
 - On launch, show the main content lowered slightly from the top of the screen.
 - Show a small `Configuration` button in the top-right corner.
 - The `Configuration` button opens a separate configuration activity.
-- In the configuration activity, before the `Generate key` button, show the label `adres serwer adres:` and one single-line SSH target text field in `user@host:port` format.
+- In the configuration activity, before the `Generate key` button, show the label `SSH server:` and one single-line SSH target text field in `user@host:port` format.
 - The SSH target field should use the hint `user@host:port`.
 - The username is required and must be provided before `@`.
 - The port is optional and defaults to the standard SSH port, `22`.
 - Remember the SSH target between launches and save it while it is edited in the configuration activity.
-- In the configuration activity, show a single-line remote APK path field.
-- The remote APK path field should default to `~/Artifacts/android/`.
-- Remember the remote APK path between launches and save it while it is edited in the configuration activity.
+- In the configuration activity, show a single-line shared folder field.
+- The shared folder field should default to `~/Artifacts/android/`.
+- Remember the shared folder between launches and save it while it is edited in the configuration activity.
+- In the configuration activity, show an `Upload screenshots to shared folder` checkbox.
+- When this checkbox is enabled, request image read permission if needed and automatically upload newly created screenshot files to the configured shared folder over SFTP.
 - The app should generate its own SSH key instead of asking the user to paste a private key.
 - In the configuration activity, add a `Generate key` button below the SSH target field.
 - Under `Generate key`, show a text field containing the generated public key for copying.
@@ -75,8 +77,8 @@ Terminal behavior:
 - Do not use a text `Send` button in the terminal command bar.
 - Place a second square icon button next to the send button with a copy icon; tapping it copies the current text from the command field at the bottom of the terminal.
 - Sending an empty command sends only Enter.
-- The terminal provides a compact, narrower `Exit` button that sends Ctrl-C to the remote shell to leave or interrupt an interactive Codex CLI session.
-- Next to the compact `Exit` button, provide a square sideways-arrow button that sends Tab to the remote shell for command autocomplete and copies the completed line back into the command field.
+- The terminal provides a compact, narrower `Cancel` button that sends Ctrl-C to the remote shell to leave or interrupt an interactive Codex CLI session.
+- Next to the compact `Cancel` button, provide a square sideways-arrow button that sends Tab to the remote shell for command autocomplete and copies the completed line back into the command field.
 - When syncing autocomplete/history text back into the command field, measure the prompt boundary from the terminal cursor column, not from trimmed line text; prompts commonly end with a space and that separator must not be copied into the command.
 - At the end of the bottom command bar, provide a square upward-arrow button that sends Up to the remote shell and copies the recalled previous command back into the command field.
 - The terminal keeps the command input above the on-screen keyboard.

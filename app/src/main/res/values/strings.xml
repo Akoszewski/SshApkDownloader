@@ -44,6 +44,9 @@
     <string name="message_terminal_not_connected">Terminal is not connected</string>
     <string name="message_no_command">No command</string>
     <string name="message_command_copied">Command copied</string>
+    <string name="message_image_permission_required">Image permission is required to upload screenshots</string>
+    <string name="message_screenshot_uploaded">Screenshot uploaded to shared folder</string>
+    <string name="message_screenshot_upload_error">Screenshot upload error: %1$s</string>
 
     <string name="terminal_connecting">Connecting to %1$s...\n</string>
     <string name="terminal_connected">[connected]\n</string>

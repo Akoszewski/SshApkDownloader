@@ -56,6 +56,15 @@ class MainActivity : Activity() {
         displayApkBinaryHash()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (preferences.getBoolean("upload_screenshots_to_shared_folder", false) && canReadImages()) {
+            ScreenshotUploadManager.start(this)
+        } else {
+            ScreenshotUploadManager.stop(this)
+        }
+    }
+
     private fun connectAndLoadApks() {
         val address = getStoredAddress()
         val privateKey = getStoredPrivateKey()
@@ -364,32 +373,6 @@ class MainActivity : Activity() {
 
     private fun getStoredRemoteApkPath(): String {
         return preferences.getString("remote_apk_path", DEFAULT_REMOTE_APK_PATH)?.trim().orEmpty()
-    }
-
-    private fun String.shellQuote(): String {
-        return "'${replace("'", "'\"'\"'")}'"
-    }
-
-    private fun String.toShellPathExpression(): String {
-        val path = trim().trimTrailingSlashes()
-        return when {
-            path == "~" -> "\$HOME"
-            path.startsWith("~/") -> "\$HOME/${path.removePrefix("~/").shellQuote()}"
-            else -> path.shellQuote()
-        }
-    }
-
-    private fun String.toSftpDirectory(): String {
-        val path = trim().trimTrailingSlashes()
-        return when {
-            path == "~" -> "."
-            path.startsWith("~/") -> path.removePrefix("~/")
-            else -> path
-        }
-    }
-
-    private fun String.trimTrailingSlashes(): String {
-        return if (length > 1) trimEnd('/').ifEmpty { "/" } else this
     }
 
     private fun showToastOnUiThread(message: String) {

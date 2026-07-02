@@ -77,9 +77,40 @@ class ConfigActivity : Activity() {
     }
 
     private fun saveScreenshotUploadEnabled(enabled: Boolean) {
+        if (enabled && !canReadImages()) {
+            requestPermissions(arrayOf(imageReadPermission()), IMAGE_READ_PERMISSION_REQUEST_CODE)
+        }
         preferences.edit()
             .putBoolean("upload_screenshots_to_shared_folder", enabled)
             .apply()
+        if (enabled && canReadImages()) {
+            ScreenshotUploadManager.start(this)
+        } else {
+            ScreenshotUploadManager.stop(this)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != IMAGE_READ_PERMISSION_REQUEST_CODE) {
+            return
+        }
+
+        val granted = canReadImages()
+        uploadScreenshotsCheckBox.isChecked = granted
+        preferences.edit()
+            .putBoolean("upload_screenshots_to_shared_folder", granted)
+            .apply()
+        if (granted) {
+            ScreenshotUploadManager.start(this)
+        } else {
+            ScreenshotUploadManager.stop(this)
+            Toast.makeText(this, getString(R.string.message_image_permission_required), Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun generateKey() {
@@ -131,5 +162,6 @@ class ConfigActivity : Activity() {
 
     companion object {
         private const val DEFAULT_REMOTE_APK_PATH = "~/Artifacts/android/"
+        private const val IMAGE_READ_PERMISSION_REQUEST_CODE = 200
     }
 }
