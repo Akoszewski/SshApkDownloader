@@ -175,34 +175,32 @@ class MainActivity : Activity() {
                 }
             })
 
-            if (apkName.endsWith(".sh", ignoreCase = true)) {
-                row.addView(Button(this).apply {
-                    text = getString(R.string.action_delete)
-                    setTextColor(Color.WHITE)
-                    backgroundTintList = ColorStateList.valueOf(getColor(R.color.danger))
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        leftMargin = dp(8)
-                    }
-                    setOnClickListener {
-                        confirmDeleteShellFile(apkName)
-                    }
-                })
-            }
+            row.addView(Button(this).apply {
+                text = getString(R.string.action_delete)
+                setTextColor(Color.WHITE)
+                backgroundTintList = ColorStateList.valueOf(getColor(R.color.danger))
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    leftMargin = dp(8)
+                }
+                setOnClickListener {
+                    confirmDeleteFile(apkName)
+                }
+            })
 
             apkListContainer.addView(row)
         }
     }
 
-    private fun confirmDeleteShellFile(fileName: String) {
+    private fun confirmDeleteFile(fileName: String) {
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.title_delete_file))
             .setMessage(getString(R.string.message_confirm_delete_file, fileName))
             .setNegativeButton(R.string.action_cancel, null)
             .setPositiveButton(R.string.action_delete) { _, _ ->
-                deleteShellFile(fileName)
+                deleteRemoteListFile(fileName)
             }
             .show()
     }
@@ -267,12 +265,7 @@ class MainActivity : Activity() {
         }.start()
     }
 
-    private fun deleteShellFile(fileName: String) {
-        if (!fileName.endsWith(".sh", ignoreCase = true)) {
-            showToast(getString(R.string.message_delete_only_shell_files))
-            return
-        }
-
+    private fun deleteRemoteListFile(fileName: String) {
         val address = getStoredAddress()
         val privateKey = getStoredPrivateKey()
         val remoteApkPath = getStoredRemoteApkPath()
@@ -289,7 +282,7 @@ class MainActivity : Activity() {
                 val session = SshSessionFactory.create(SshTargetParser.parse(address), privateKey)
                 try {
                     session.connect(15_000)
-                    deleteRemoteShellFile(session, remoteApkPath, fileName)
+                    deleteRemoteFile(session, remoteApkPath, fileName)
                     listRemoteFiles(session, remoteApkPath)
                 } finally {
                     session.disconnect()
@@ -335,9 +328,8 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun deleteRemoteShellFile(session: Session, remoteApkPath: String, fileName: String) {
+    private fun deleteRemoteFile(session: Session, remoteApkPath: String, fileName: String) {
         RemoteFileNameValidator.requireValid(fileName)
-        require(fileName.endsWith(".sh", ignoreCase = true)) { "Only .sh files can be deleted" }
 
         val channel = session.openChannel("sftp") as ChannelSftp
         channel.connect(15_000)

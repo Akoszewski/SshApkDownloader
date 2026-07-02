@@ -45,7 +45,6 @@
     <string name="message_delete_started">Delete started: %1$s</string>
     <string name="message_delete_completed">Deleted: %1$s</string>
     <string name="message_delete_error">Delete error: %1$s</string>
-    <string name="message_delete_only_shell_files">Only .sh files can be deleted</string>
     <string name="message_generating_key">Generating key</string>
     <string name="message_key_generated">Key generated</string>
     <string name="message_generation_error">Generation error: %1$s</string>
