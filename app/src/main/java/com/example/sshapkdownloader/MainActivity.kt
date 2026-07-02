@@ -2,6 +2,7 @@ package com.example.sshapkdownloader
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -150,21 +151,60 @@ class MainActivity : Activity() {
         }
 
         apkNames.forEach { apkName ->
-            apkListContainer.addView(Button(this).apply {
-                text = apkName
-                setTextColor(Color.WHITE)
-                backgroundTintList = ColorStateList.valueOf(getColor(R.color.accent))
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
                     bottomMargin = dp(10)
                 }
+            }
+
+            row.addView(Button(this).apply {
+                text = apkName
+                setTextColor(Color.WHITE)
+                backgroundTintList = ColorStateList.valueOf(getColor(R.color.accent))
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
                 setOnClickListener {
                     downloadApk(apkName)
                 }
             })
+
+            if (apkName.endsWith(".sh", ignoreCase = true)) {
+                row.addView(Button(this).apply {
+                    text = getString(R.string.action_delete)
+                    setTextColor(Color.WHITE)
+                    backgroundTintList = ColorStateList.valueOf(getColor(R.color.danger))
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        leftMargin = dp(8)
+                    }
+                    setOnClickListener {
+                        confirmDeleteShellFile(apkName)
+                    }
+                })
+            }
+
+            apkListContainer.addView(row)
         }
+    }
+
+    private fun confirmDeleteShellFile(fileName: String) {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.title_delete_file))
+            .setMessage(getString(R.string.message_confirm_delete_file, fileName))
+            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.action_delete) { _, _ ->
+                deleteShellFile(fileName)
+            }
+            .show()
     }
 
     private fun displayApkBinaryHash() {
@@ -227,6 +267,44 @@ class MainActivity : Activity() {
         }.start()
     }
 
+    private fun deleteShellFile(fileName: String) {
+        if (!fileName.endsWith(".sh", ignoreCase = true)) {
+            showToast(getString(R.string.message_delete_only_shell_files))
+            return
+        }
+
+        val address = getStoredAddress()
+        val privateKey = getStoredPrivateKey()
+        val remoteApkPath = getStoredRemoteApkPath()
+
+        if (address.isEmpty() || privateKey.isBlank() || remoteApkPath.isBlank()) {
+            showToast(getString(R.string.message_ssh_target_key_and_path_required))
+            return
+        }
+
+        showToast(getString(R.string.message_delete_started, fileName))
+
+        Thread {
+            runCatching {
+                val session = SshSessionFactory.create(SshTargetParser.parse(address), privateKey)
+                try {
+                    session.connect(15_000)
+                    deleteRemoteShellFile(session, remoteApkPath, fileName)
+                    listRemoteFiles(session, remoteApkPath)
+                } finally {
+                    session.disconnect()
+                }
+            }.onSuccess { apkNames ->
+                runOnUiThread {
+                    showToast(getString(R.string.message_delete_completed, fileName))
+                    displayApkButtons(apkNames)
+                }
+            }.onFailure { error ->
+                showToastOnUiThread(getString(R.string.message_delete_error, error.displayMessage()))
+            }
+        }.start()
+    }
+
     private fun openTerminal() {
         val address = getStoredAddress()
         val privateKey = getStoredPrivateKey()
@@ -252,6 +330,20 @@ class MainActivity : Activity() {
             }
             destination.markComplete()
             return destination.uri
+        } finally {
+            channel.disconnect()
+        }
+    }
+
+    private fun deleteRemoteShellFile(session: Session, remoteApkPath: String, fileName: String) {
+        RemoteFileNameValidator.requireValid(fileName)
+        require(fileName.endsWith(".sh", ignoreCase = true)) { "Only .sh files can be deleted" }
+
+        val channel = session.openChannel("sftp") as ChannelSftp
+        channel.connect(15_000)
+        try {
+            channel.cd(remoteApkPath.toSftpDirectory())
+            channel.rm(fileName)
         } finally {
             channel.disconnect()
         }
