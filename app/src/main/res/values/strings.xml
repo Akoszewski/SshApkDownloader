@@ -36,7 +36,8 @@
     <string name="message_ssh_target_key_and_path_required">SSH target, generated key, and shared folder are required</string>
     <string name="message_connecting">Connecting</string>
     <string name="message_ssh_error">SSH error: %1$s</string>
-    <string name="message_no_files_found">No files found in shared folder</string>
+    <string name="message_no_files_found">No files in this shared folder</string>
+    <string name="message_no_files_found_detail">Upload or build a file on the server, then load the folder again.</string>
     <string name="message_download_started">Download started: %1$s</string>
     <string name="message_download_completed">Download completed: %1$s</string>
     <string name="message_download_error">Download error: %1$s</string>

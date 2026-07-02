@@ -145,14 +145,12 @@ class MainActivity : Activity() {
         apkListContainer.removeAllViews()
 
         if (apkNames.isEmpty()) {
-            apkListContainer.addView(TextView(this).apply {
-                text = getString(R.string.message_no_files_found)
-                textSize = 16f
-                setTextColor(getColor(R.color.text_muted))
-            })
+            apkListContainer.gravity = Gravity.CENTER
+            apkListContainer.addView(createEmptyFolderView())
             return
         }
 
+        apkListContainer.gravity = Gravity.NO_GRAVITY
         apkNames.forEach { apkName ->
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -203,6 +201,55 @@ class MainActivity : Activity() {
             })
 
             apkListContainer.addView(row)
+        }
+    }
+
+    private fun createEmptyFolderView(): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(24), dp(36), dp(24), dp(36))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+
+            addView(ImageView(this@MainActivity).apply {
+                setImageResource(R.drawable.ic_folder_open_48)
+                contentDescription = null
+                layoutParams = LinearLayout.LayoutParams(
+                    dp(56),
+                    dp(56)
+                ).apply {
+                    bottomMargin = dp(16)
+                }
+            })
+
+            addView(TextView(this@MainActivity).apply {
+                text = getString(R.string.message_no_files_found)
+                gravity = Gravity.CENTER
+                textSize = 18f
+                setTextColor(getColor(R.color.text_primary))
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            })
+
+            addView(TextView(this@MainActivity).apply {
+                text = getString(R.string.message_no_files_found_detail)
+                gravity = Gravity.CENTER
+                textSize = 14f
+                setTextColor(getColor(R.color.text_muted))
+                setLineSpacing(dp(2).toFloat(), 1f)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dp(8)
+                }
+            })
         }
     }
 

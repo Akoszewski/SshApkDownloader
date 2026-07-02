@@ -43,6 +43,7 @@ Connection behavior:
 - Display one button per file.
 - Button labels should be the filenames.
 - The file buttons should appear one below another in a scrollable view.
+- When the shared folder is empty, show a centered empty-folder state in the file list area.
 - Show a red trash icon button next to every file button.
 - Pressing the trash icon should show a confirmation dialog before removing the file from the shared folder.
 - Use Toast messages for SSH errors.
