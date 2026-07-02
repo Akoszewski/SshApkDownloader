@@ -12,8 +12,8 @@ Implementation requirements:
 Initial UI:
 
 - On launch, show the main content lowered slightly from the top of the screen.
-- Show a small `Configuration` button in the top-right corner.
-- The `Configuration` button opens a separate configuration activity.
+- Show a compact settings action near the top of the main screen.
+- The settings action opens a separate configuration activity.
 - In the configuration activity, before the `Generate key` button, show the label `SSH server:` and one single-line SSH target text field in `user@host:port` format.
 - The SSH target field should use the hint `user@host:port`.
 - The username is required and must be provided before `@`.
@@ -34,16 +34,17 @@ Initial UI:
 - Store the generated private key internally for SSH connections.
 - Show a `Load files` button on the main screen.
 - Keep clear vertical spacing between the `Load files` button and the APK download buttons.
+- On the main screen, keep the visible app title in its own row above the terminal and configuration actions.
+- Show the APK SHA-256 as secondary text and abbreviate it in the main UI so it does not dominate the screen.
 - Use a polished visual style with consistent colors, readable text contrast, and comfortable spacing.
 
 Connection behavior:
 
 - After pressing `Load files`, connect to the server using the provided credentials.
 - Load all regular files located on the server at the configured remote shared folder path.
-- Display one button per file.
-- Button labels should be the filenames.
-- The file buttons should appear one below another in a scrollable view.
-- Show a red trash icon button next to every file button.
+- Display one row per file in a scrollable view.
+- Each file row should show a readable filename with truncation for long names, a download action, and a delete action.
+- Show a red trash icon button in every file row.
 - Pressing the trash icon should show a confirmation dialog before removing the file from the shared folder.
 - Use Toast messages for SSH errors.
 

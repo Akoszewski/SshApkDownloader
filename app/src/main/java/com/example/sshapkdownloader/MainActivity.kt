@@ -12,12 +12,13 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.text.TextUtils
 import android.view.Gravity
 import android.webkit.MimeTypeMap
 import android.widget.Button
@@ -145,41 +146,54 @@ class MainActivity : Activity() {
         apkListContainer.removeAllViews()
 
         if (apkNames.isEmpty()) {
-            apkListContainer.addView(TextView(this).apply {
-                text = getString(R.string.message_no_files_found)
-                textSize = 16f
-                setTextColor(getColor(R.color.text_muted))
-            })
+            apkListContainer.gravity = Gravity.CENTER
+            apkListContainer.addView(createEmptyFolderView())
             return
         }
 
+        apkListContainer.gravity = Gravity.NO_GRAVITY
         apkNames.forEach { apkName ->
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 setBackgroundResource(R.drawable.file_list_item_background)
-                setPadding(dp(8), dp(8), dp(8), dp(8))
+                setPadding(dp(14), dp(10), dp(10), dp(10))
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
                     bottomMargin = dp(12)
                 }
+                setOnClickListener {
+                    downloadApk(apkName)
+                }
             }
 
-            row.addView(Button(this).apply {
+            row.addView(TextView(this).apply {
                 text = apkName
-                setAllCaps(false)
-                setTextColor(Color.WHITE)
-                textSize = 11f
+                setTextColor(getColor(R.color.text_primary))
+                textSize = 12f
+                ellipsize = TextUtils.TruncateAt.MIDDLE
                 maxLines = 2
-                backgroundTintList = ColorStateList.valueOf(getColor(R.color.accent))
-                minHeight = dp(48)
-                setPadding(dp(14), 0, dp(14), 0)
+                setLineSpacing(dp(2).toFloat(), 1f)
                 layoutParams = LinearLayout.LayoutParams(
                     0,
-                    dp(48),
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
                     1f
+                ).apply {
+                    rightMargin = dp(8)
+                }
+            })
+
+            row.addView(ImageButton(this).apply {
+                setImageResource(R.drawable.ic_arrow_downward_24)
+                backgroundTintList = ColorStateList.valueOf(getColor(R.color.accent))
+                contentDescription = getString(R.string.action_download)
+                scaleType = ImageView.ScaleType.CENTER
+                setPadding(dp(12), dp(12), dp(12), dp(12))
+                layoutParams = LinearLayout.LayoutParams(
+                    dp(48),
+                    dp(48)
                 )
                 setOnClickListener {
                     downloadApk(apkName)
@@ -207,6 +221,55 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun createEmptyFolderView(): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(24), dp(28), dp(24), dp(28))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+
+            addView(ImageView(this@MainActivity).apply {
+                setImageResource(R.drawable.ic_folder_open_48)
+                contentDescription = null
+                layoutParams = LinearLayout.LayoutParams(
+                    dp(56),
+                    dp(56)
+                ).apply {
+                    bottomMargin = dp(16)
+                }
+            })
+
+            addView(TextView(this@MainActivity).apply {
+                text = getString(R.string.message_no_files_found)
+                gravity = Gravity.CENTER
+                textSize = 18f
+                setTextColor(getColor(R.color.text_primary))
+                setTypeface(typeface, Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            })
+
+            addView(TextView(this@MainActivity).apply {
+                text = getString(R.string.message_no_files_found_detail)
+                gravity = Gravity.CENTER
+                textSize = 14f
+                setTextColor(getColor(R.color.text_muted))
+                setLineSpacing(dp(2).toFloat(), 1f)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dp(8)
+                }
+            })
+        }
+    }
+
     private fun confirmDeleteFile(fileName: String) {
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.title_delete_file))
@@ -221,7 +284,7 @@ class MainActivity : Activity() {
     private fun displayApkBinaryHash() {
         Thread {
             val text = runCatching {
-                getString(R.string.apk_binary_hash, installedApkSha256())
+                getString(R.string.apk_binary_hash, installedApkSha256().shortHash())
             }.getOrElse { error ->
                 getString(R.string.apk_binary_hash_error, error.displayMessage())
             }
@@ -245,6 +308,14 @@ class MainActivity : Activity() {
         }
         return digest.digest().joinToString(separator = "") { byte ->
             "%02x".format(byte)
+        }
+    }
+
+    private fun String.shortHash(): String {
+        return if (length <= HASH_DISPLAY_PREFIX + HASH_DISPLAY_SUFFIX) {
+            this
+        } else {
+            "${take(HASH_DISPLAY_PREFIX)}...${takeLast(HASH_DISPLAY_SUFFIX)}"
         }
     }
 
@@ -504,5 +575,7 @@ class MainActivity : Activity() {
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 100
         private const val DEFAULT_REMOTE_APK_PATH = "~/Artifacts/android/"
         private const val DEFAULT_FILE_MIME_TYPE = "application/octet-stream"
+        private const val HASH_DISPLAY_PREFIX = 8
+        private const val HASH_DISPLAY_SUFFIX = 6
     }
 }
