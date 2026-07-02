@@ -163,6 +163,7 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
     private fun connectShell() {
         val address = preferences.getString("ip_address", "")?.trim().orEmpty()
         val privateKey = preferences.getString("private_ssh_key", "").orEmpty()
+        val terminalStartPath = preferences.getString("terminal_start_path", "")?.trim().orEmpty()
 
         if (address.isBlank() || privateKey.isBlank()) {
             Toast.makeText(this, getString(R.string.message_ssh_target_and_key_required), Toast.LENGTH_SHORT).show()
@@ -177,7 +178,7 @@ class TerminalActivity : Activity(), TerminalSessionManager.Listener {
         autocompleteButton.isEnabled = false
         previousCommandButton.isEnabled = false
         nextCommandButton.isEnabled = false
-        TerminalSessionManager.connect(this, address, privateKey)
+        TerminalSessionManager.connect(this, address, privateKey, terminalStartPath)
     }
 
     private fun sendCommand() {

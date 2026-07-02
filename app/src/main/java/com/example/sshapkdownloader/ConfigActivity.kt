@@ -19,6 +19,7 @@ class ConfigActivity : Activity() {
 
     private lateinit var ipAddressEditText: EditText
     private lateinit var remoteApkPathEditText: EditText
+    private lateinit var terminalStartPathEditText: EditText
     private lateinit var uploadScreenshotsCheckBox: CheckBox
     private lateinit var publicKeyEditText: EditText
     private lateinit var generateButton: Button
@@ -28,6 +29,7 @@ class ConfigActivity : Activity() {
         setContentView(R.layout.activity_config)
         ipAddressEditText = findViewById(R.id.ipAddressEditText)
         remoteApkPathEditText = findViewById(R.id.remoteApkPathEditText)
+        terminalStartPathEditText = findViewById(R.id.terminalStartPathEditText)
         uploadScreenshotsCheckBox = findViewById(R.id.uploadScreenshotsCheckBox)
         publicKeyEditText = findViewById(R.id.publicKeyEditText)
         generateButton = findViewById(R.id.generateButton)
@@ -42,6 +44,13 @@ class ConfigActivity : Activity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 saveRemoteApkPath(s?.toString().orEmpty())
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
+        terminalStartPathEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                saveTerminalStartPath(s?.toString().orEmpty())
             }
             override fun afterTextChanged(s: Editable?) = Unit
         })
@@ -60,6 +69,7 @@ class ConfigActivity : Activity() {
     private fun restoreSavedValues() {
         ipAddressEditText.setText(preferences.getString("ip_address", ""))
         remoteApkPathEditText.setText(preferences.getString("remote_apk_path", DEFAULT_REMOTE_APK_PATH))
+        terminalStartPathEditText.setText(preferences.getString("terminal_start_path", ""))
         uploadScreenshotsCheckBox.isChecked = preferences.getBoolean("upload_screenshots_to_shared_folder", false)
         publicKeyEditText.setText(preferences.getString("public_ssh_key", ""))
     }
@@ -73,6 +83,12 @@ class ConfigActivity : Activity() {
     private fun saveRemoteApkPath(remoteApkPath: String) {
         preferences.edit()
             .putString("remote_apk_path", remoteApkPath)
+            .apply()
+    }
+
+    private fun saveTerminalStartPath(terminalStartPath: String) {
+        preferences.edit()
+            .putString("terminal_start_path", terminalStartPath)
             .apply()
     }
 

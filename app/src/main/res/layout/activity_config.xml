@@ -1,12 +1,16 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/screen_background"
-    android:orientation="vertical"
-    android:paddingStart="24dp"
-    android:paddingTop="28dp"
-    android:paddingEnd="24dp"
-    android:paddingBottom="28dp">
+    android:background="@color/screen_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="28dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="28dp">
 
     <TextView
         android:layout_width="match_parent"
@@ -61,6 +65,28 @@
         android:textColor="@color/text_primary"
         android:textColorHint="@color/text_muted" />
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:text="@string/label_terminal_start_path"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/terminalStartPathEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="18dp"
+        android:backgroundTint="@color/primary"
+        android:hint="@string/hint_terminal_start_path"
+        android:imeOptions="actionNext"
+        android:inputType="textUri"
+        android:singleLine="true"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_muted" />
+
     <CheckBox
         android:id="@+id/uploadScreenshotsCheckBox"
         android:layout_width="match_parent"
@@ -108,4 +134,5 @@
             android:text="@string/action_copy"
             android:textColor="@color/primary" />
     </LinearLayout>
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>

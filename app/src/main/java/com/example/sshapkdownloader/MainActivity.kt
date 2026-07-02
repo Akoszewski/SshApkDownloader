@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.webkit.MimeTypeMap
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -83,7 +84,7 @@ class MainActivity : Activity() {
                 val session = SshSessionFactory.create(SshTargetParser.parse(address), privateKey)
                 try {
                     session.connect(15_000)
-                    listRemoteApks(session, remoteApkPath)
+                    listRemoteFiles(session, remoteApkPath)
                 } finally {
                     session.disconnect()
                 }
@@ -100,12 +101,12 @@ class MainActivity : Activity() {
         }.start()
     }
 
-    private fun listRemoteApks(session: Session, remoteApkPath: String): List<String> {
-        val command = "find ${remoteApkPath.toShellPathExpression()} -maxdepth 1 -type f -name '*.apk' -printf '%f\\n' | sort"
+    private fun listRemoteFiles(session: Session, remoteApkPath: String): List<String> {
+        val command = "find ${remoteApkPath.toShellPathExpression()} -maxdepth 1 -type f -printf '%f\\n' | sort"
         val output = executeRemoteCommand(session, command)
         return output.lineSequence()
-            .map { it.trim() }
-            .filter { it.endsWith(".apk") }
+            .map { it.removeSuffix("\r") }
+            .filter { it.isNotEmpty() }
             .toList()
     }
 
@@ -141,7 +142,7 @@ class MainActivity : Activity() {
 
         if (apkNames.isEmpty()) {
             apkListContainer.addView(TextView(this).apply {
-                text = getString(R.string.message_no_apk_files_found)
+                text = getString(R.string.message_no_files_found)
                 textSize = 16f
                 setTextColor(getColor(R.color.text_muted))
             })
@@ -239,7 +240,7 @@ class MainActivity : Activity() {
     }
 
     private fun downloadRemoteApk(session: Session, remoteApkPath: String, apkName: String): Uri {
-        ApkNameValidator.requireValid(apkName)
+        RemoteFileNameValidator.requireValid(apkName)
 
         val channel = session.openChannel("sftp") as ChannelSftp
         channel.connect(15_000)
@@ -260,7 +261,7 @@ class MainActivity : Activity() {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val values = ContentValues().apply {
                 put(MediaStore.Downloads.DISPLAY_NAME, apkName)
-                put(MediaStore.Downloads.MIME_TYPE, DownloadedApkProvider.APK_MIME_TYPE)
+                put(MediaStore.Downloads.MIME_TYPE, mimeTypeFor(apkName))
                 put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/SshApkDownloader")
                 put(MediaStore.Downloads.IS_PENDING, 1)
             }
@@ -300,7 +301,7 @@ class MainActivity : Activity() {
         }
 
         val installIntent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(apkUri, DownloadedApkProvider.APK_MIME_TYPE)
+            setDataAndType(apkUri, mimeTypeFor(apkName))
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val pendingIntent = PendingIntent.getActivity(
@@ -312,7 +313,7 @@ class MainActivity : Activity() {
 
         val notification = notificationBuilder()
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle(getString(R.string.notification_apk_downloaded))
+            .setContentTitle(getString(R.string.notification_file_downloaded))
             .setContentText(apkName)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
@@ -349,6 +350,16 @@ class MainActivity : Activity() {
         } else {
             Notification.Builder(this)
         }
+    }
+
+    private fun mimeTypeFor(fileName: String): String {
+        if (fileName.endsWith(".apk", ignoreCase = true)) {
+            return DownloadedApkProvider.APK_MIME_TYPE
+        }
+
+        val extension = fileName.substringAfterLast('.', missingDelimiterValue = "")
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.lowercase())
+            ?: DEFAULT_FILE_MIME_TYPE
     }
 
     private fun notificationManager(): NotificationManager {
@@ -395,5 +406,6 @@ class MainActivity : Activity() {
         private const val DOWNLOAD_CHANNEL_ID = "apk_downloads"
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 100
         private const val DEFAULT_REMOTE_APK_PATH = "~/Artifacts/android/"
+        private const val DEFAULT_FILE_MIME_TYPE = "application/octet-stream"
     }
 }

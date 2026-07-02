@@ -79,7 +79,7 @@ object TerminalSessionManager {
         }
     }
 
-    fun connect(context: Context, address: String, privateKey: String) {
+    fun connect(context: Context, address: String, privateKey: String, initialDirectory: String) {
         val appContext = context.applicationContext
         applicationContext = appContext
 
@@ -122,6 +122,7 @@ object TerminalSessionManager {
                     disconnectShell()
                     return@Thread
                 }
+                changeInitialDirectory(remoteOutput, initialDirectory)
                 connecting = false
                 startKeepAliveLoop(sshSession)
                 appendOutput(appContext.getString(R.string.terminal_connected))
@@ -260,6 +261,19 @@ object TerminalSessionManager {
             name = "ssh-terminal-write-command"
             isDaemon = true
             start()
+        }
+    }
+
+    private fun changeInitialDirectory(output: OutputStream, initialDirectory: String) {
+        val directory = initialDirectory.trim()
+        if (directory.isBlank()) {
+            return
+        }
+
+        synchronized(writerLock) {
+            output.write("cd ${directory.toShellPathExpression()}".toByteArray(Charsets.UTF_8))
+            output.write(ENTER_KEY_BYTES)
+            output.flush()
         }
     }
 
