@@ -4,6 +4,8 @@
     <string name="action_terminal">Terminal</string>
     <string name="action_configuration">Configuration</string>
     <string name="action_connect">Load files</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
     <string name="action_generate_key">Generate key</string>
     <string name="action_copy">Copy</string>
     <string name="action_send">Send</string>
@@ -38,6 +40,12 @@
     <string name="message_download_started">Download started: %1$s</string>
     <string name="message_download_completed">Download completed: %1$s</string>
     <string name="message_download_error">Download error: %1$s</string>
+    <string name="title_delete_file">Delete file?</string>
+    <string name="message_confirm_delete_file">Are you sure you want to delete %1$s?</string>
+    <string name="message_delete_started">Delete started: %1$s</string>
+    <string name="message_delete_completed">Deleted: %1$s</string>
+    <string name="message_delete_error">Delete error: %1$s</string>
+    <string name="message_delete_only_shell_files">Only .sh files can be deleted</string>
     <string name="message_generating_key">Generating key</string>
     <string name="message_key_generated">Key generated</string>
     <string name="message_generation_error">Generation error: %1$s</string>
