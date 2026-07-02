@@ -14,29 +14,35 @@ Use this workflow for feature or fix implementation that should land through a p
    - Check `git status --short --branch`.
    - If the working tree has unrelated user changes, preserve them and work around them.
 
-2. Create a dedicated branch before editing.
+2. Start from an up-to-date `master`.
+   - If not already on `master`, switch to `master` before creating the feature branch.
+   - Confirm the working tree is clean or only contains unrelated user changes that can be preserved.
+   - Run `git pull` on `master` and make sure it completes successfully.
+   - Create the feature branch only after `master` is synchronized with `origin/master`.
+
+3. Create a dedicated branch before editing.
    - Choose a short branch name that describes the requested work.
-   - Prefer lowercase hyphenated names with a `codex/` prefix, for example `codex/add-apk-path-config`.
+   - Prefer lowercase hyphenated names with a `feature/` prefix, for example `feature/add-apk-path-config`.
    - Do not work directly on `master` unless the user explicitly asks.
 
-3. Implement the change using normal repo conventions.
+4. Implement the change using normal repo conventions.
    - Keep edits scoped to the requested feature or fix.
    - Follow existing architecture, naming, formatting, and UI patterns.
    - Add or update tests when the behavioral risk justifies it.
    - Find and update the repository's instruction Markdown file when the change adds or changes user-visible behavior. Add a concise description of the feature, configuration, or workflow so the instructions stay current. If no suitable instruction file exists, ask before creating a new one.
 
-4. Commit in the repository's existing style and cadence.
+5. Commit in the repository's existing style and cadence.
    - Inspect recent commit history before the first commit.
    - Match the local style: short imperative subject lines such as `Add ...`, `Fix ...`, `Improve ...`, or `Move ...`.
    - Commit after coherent, buildable units of work rather than after every tiny edit.
    - Before every commit, run the project's build command. For this repo, prefer `./build.sh` when available; otherwise use the established Gradle build command.
    - Do not commit if the build fails. Fix the issue or report the blocker.
 
-5. Push the branch when implementation and verification are complete.
+6. Push the branch when implementation and verification are complete.
    - Push only the feature branch, not `master`.
    - If branch protection requires pull requests, leave PR creation to the user unless they explicitly ask Codex to create it.
 
-6. Final response.
+7. Final response.
    - State that the work is implemented.
    - Include the branch name.
    - Mention the build command that passed.
